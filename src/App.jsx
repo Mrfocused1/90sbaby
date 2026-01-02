@@ -720,14 +720,6 @@ export default function App() {
                             {view === 'home' ? 'SP' : view === 'archive' ? 'ARCHIVE' : 'UPLINK'}
                         </span>
 
-                        {/* MOBILE MENU TOGGLE */}
-                        <button
-                            onClick={() => setIsMenuOpen(true)}
-                            className="md:hidden mt-2 pointer-events-auto bg-white text-black font-brand text-xs px-2 py-1 border-2 border-black flex items-center gap-2 active:translate-y-0.5"
-                        >
-                            <CassetteTape className="w-4 h-4" /> MENU
-                        </button>
-
                         {/* --- NAVIGATION MENU (DESKTOP) --- */}
                         <nav className="mt-4 hidden md:flex gap-4 md:gap-8 pointer-events-auto">
                             <button
@@ -751,6 +743,13 @@ export default function App() {
                         </nav>
                     </div>
                     <div className="flex flex-col items-end gap-1 md:gap-2">
+                        {/* MOBILE MENU TOGGLE */}
+                        <button
+                            onClick={() => setIsMenuOpen(true)}
+                            className="md:hidden pointer-events-auto bg-white text-black font-brand text-xs px-2 py-1 border-2 border-black flex items-center gap-2 active:translate-y-0.5"
+                        >
+                            <CassetteTape className="w-4 h-4" /> MENU
+                        </button>
                         <div className="flex items-center gap-2 text-green-400"><Battery className="w-6 h-6 md:w-8 md:h-8" /></div>
                         <span className="font-mono bg-black/50 px-2 rounded backdrop-blur-sm border border-white/20 text-sm md:text-xl">{timecode}</span>
                     </div>
