@@ -514,6 +514,7 @@ export default function App() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isReelActive, setIsReelActive] = useState(false);
 
     const containerRef = useRef(null);
 
@@ -591,6 +592,7 @@ export default function App() {
                         invalidateOnRefresh: true,
                         start: window.innerWidth < 768 ? "center center" : "top top",
                         end: "+=3000",
+                        onToggle: (self) => setIsReelActive(self.isActive),
                     }
                 });
             }
@@ -716,9 +718,9 @@ export default function App() {
                     </div>
                 </div>
 
-                {/* Focus Brackets (Only in Home View) */}
+                {/* Focus Brackets (Only in Home View - Episodes Section) */}
                 {view === 'home' && (
-                    <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-700 ${isPoweredOn ? 'scale-100 opacity-60' : 'scale-150 opacity-0'}`}>
+                    <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-700 ${isReelActive ? 'scale-100 opacity-60' : 'scale-110 opacity-0'}`}>
                         <div className="w-[90vw] h-[45vh] md:w-[600px] md:h-[400px] border-2 border-white/30 relative">
                             <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white/80 -mt-1 -ml-1" />
                             <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white/80 -mt-1 -mr-1" />
