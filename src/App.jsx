@@ -1,0 +1,522 @@
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { Play, Pause, FastForward, Rewind, Battery, Disc, Zap, Star, CassetteTape, Radio, Mic, Activity, Search, X, ChevronLeft } from 'lucide-react';
+
+/* --- GSAP CDN INJECTION HELPER --- */
+const useGSAP = () => {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const scripts = [
+      "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"
+    ];
+
+    let loadedCount = 0;
+    scripts.forEach(src => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = false;
+      script.onload = () => {
+        loadedCount++;
+        if (loadedCount === scripts.length) {
+          window.gsap.registerPlugin(window.ScrollTrigger, window.TextPlugin);
+          setReady(true);
+        }
+      };
+      document.body.appendChild(script);
+    });
+  }, []);
+  return ready;
+};
+
+/* --- MOCK DATA FOR ARCHIVE --- */
+const EPISODE_DB = [
+  { id: 44, title: "FASHION FAUX PAS", date: "JAN 1999", tags: ["Roast", "Style"], color: "bg-green-600" },
+  { id: 43, title: "SUMMER ANTHEMS", date: "JUN 1998", tags: ["Music", "Debate"], color: "bg-purple-600" },
+  { id: 42, title: "THE NOSTALGIA TRIP", date: "DEC 1997", tags: ["Funny", "Deep Dive"], color: "bg-pink-600" },
+  { id: 41, title: "SCHOOL DAZE", date: "SEP 1997", tags: ["Storytime", "Cringe"], color: "bg-yellow-500" },
+  { id: 40, title: "CONSOLE WARS", date: "AUG 1997", tags: ["Gaming", "Sega"], color: "bg-blue-600" },
+  { id: 39, title: "SATURDAY CARTOONS", date: "JUL 1997", tags: ["TV", "Classics"], color: "bg-red-600" },
+  { id: 38, title: "MIX TAPE MASTERY", date: "MAY 1997", tags: ["Music", "Love"], color: "bg-cyan-600" },
+  { id: 37, title: "BLOCKBUSTER NIGHTS", date: "APR 1997", tags: ["Movies", "Weekend"], color: "bg-orange-500" },
+  { id: 36, title: "THE PAGERS ERA", date: "MAR 1997", tags: ["Tech", "Beep"], color: "bg-zinc-600" },
+];
+
+export default function App() {
+  const gsapReady = useGSAP();
+  const [isPoweredOn, setIsPoweredOn] = useState(false);
+  const [timecode, setTimecode] = useState("00:00:00:00");
+  const [mode, setMode] = useState("STANDBY");
+  const [tapeGlitch, setTapeGlitch] = useState(0);
+  const [view, setView] = useState("home"); // 'home' | 'archive'
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const containerRef = useRef(null);
+
+  // Power On Sequence
+  useEffect(() => {
+    if (gsapReady) {
+      setTimeout(() => setIsPoweredOn(true), 500);
+    }
+  }, [gsapReady]);
+
+  // Main Scroll Logic & Animation (Only active in 'home' view)
+  useLayoutEffect(() => {
+    if (!gsapReady || !isPoweredOn || view !== 'home') return;
+
+    const ctx = window.gsap.context(() => {
+      const tl = window.gsap.timeline();
+
+      // 1. Initial Power On Animation (only runs once realistically, but safe to keep)
+      tl.fromTo(".viewfinder-inner",
+        { scaleY: 0.01, scaleX: 0.8, opacity: 0 },
+        { scaleY: 1, scaleX: 1, opacity: 1, duration: 0.4, ease: "power2.out" }
+      )
+        .to(".viewfinder-overlay", { opacity: 1, duration: 0.2 })
+        .add(() => setMode("REC"));
+
+      // 2. Scroll-based Timecode & Glitch
+      window.ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: "top top",
+        end: "bottom bottom",
+        onUpdate: (self) => {
+          const totalFrames = Math.floor(self.progress * 5000);
+          const hrs = Math.floor(totalFrames / 108000).toString().padStart(2, '0');
+          const mins = Math.floor((totalFrames % 108000) / 1800).toString().padStart(2, '0');
+          const secs = Math.floor((totalFrames % 1800) / 30).toString().padStart(2, '0');
+          const frames = (totalFrames % 30).toString().padStart(2, '0');
+          setTimecode(`${hrs}:${mins}:${secs}:${frames}`);
+
+          const velocity = Math.abs(self.getVelocity());
+          const glitchAmount = Math.min(velocity / 2000, 1);
+          setTapeGlitch(glitchAmount);
+
+          if (velocity > 1000) {
+            setMode(self.direction === 1 ? "FF >>" : "<< REW");
+          } else if (velocity > 50) {
+            setMode("PLAY");
+          } else {
+            if (self.progress < 0.9) setMode("REC");
+          }
+        }
+      });
+
+      // 3. Section Animations
+      window.gsap.from(".logo-main", {
+        scrollTrigger: { trigger: ".section-intro", start: "top center", scrub: 1 },
+        scale: 0.5, opacity: 0, rotation: -10
+      });
+
+      const hosts = window.gsap.utils.toArray(".host-card");
+      hosts.forEach((host, i) => {
+        window.gsap.from(host, {
+          scrollTrigger: { trigger: host, start: "top 80%", end: "center center", scrub: true },
+          scale: 0.8, opacity: 0, y: 100
+        });
+      });
+
+      // Horizontal Scroll Fix
+      const reel = containerRef.current.querySelector(".tape-reel");
+      if (reel) {
+        const getScrollAmount = () => -(reel.scrollWidth - window.innerWidth);
+        window.gsap.to(reel, {
+          x: getScrollAmount,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".tape-track",
+            pin: true,
+            scrub: 1,
+            invalidateOnRefresh: true,
+            end: "+=3000",
+          }
+        });
+      }
+
+      window.gsap.to(".blue-screen", {
+        scrollTrigger: {
+          trigger: ".section-outro",
+          start: "center center",
+          end: "bottom bottom",
+          scrub: true
+        },
+        opacity: 1
+      });
+
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, [gsapReady, isPoweredOn, view]);
+
+  // Handle View Switching
+  const handleViewArchive = () => {
+    setMode("DB_ACCESS");
+    setTapeGlitch(0.8); // Glitch transition
+    setTimeout(() => {
+      setView("archive");
+      setTapeGlitch(0);
+      window.scrollTo(0, 0);
+    }, 500);
+  };
+
+  const handleBackHome = () => {
+    setMode("LOAD...");
+    setTapeGlitch(0.8);
+    setTimeout(() => {
+      setView("home");
+      setTapeGlitch(0);
+      setMode("REC");
+    }, 500);
+  };
+
+  // Filter Logic
+  const filteredEpisodes = EPISODE_DB.filter(ep =>
+    ep.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ep.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  if (!gsapReady) return <div className="bg-black h-screen w-screen flex items-center justify-center text-white font-mono">INSERT TAPE...</div>;
+
+  return (
+    <div ref={containerRef} className="bg-zinc-900 min-h-screen relative overflow-x-hidden font-sans selection:bg-pink-500 selection:text-white">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Press+Start+2P&family=Righteous&family=VT323&display=swap');
+        .font-hud { font-family: 'VT323', monospace; }
+        .font-brand { font-family: 'Righteous', cursive; }
+        .font-retro { font-family: 'Press Start 2P', cursive; }
+        .font-bungee { font-family: 'Bungee Shade', cursive; }
+        .scanlines {
+          background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+          background-size: 100% 4px;
+          animation: scrollScan 10s linear infinite;
+          pointer-events: none;
+        }
+        @keyframes scrollScan { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+      `}</style>
+
+      {/* --- VIEWFINDER HUD (ALWAYS VISIBLE) --- */}
+      <div className="fixed inset-0 z-50 pointer-events-none p-2 md:p-6 flex flex-col justify-between overflow-hidden">
+        <div className={`absolute inset-0 bg-gradient-to-br from-white/5 to-black/20 mix-blend-overlay pointer-events-none transition-opacity duration-100 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`} />
+        <div className={`absolute inset-0 scanlines pointer-events-none z-10 ${isPoweredOn ? 'opacity-30' : 'opacity-0'}`} />
+        <div
+          className="absolute inset-0 bg-noise opacity-0 transition-opacity duration-75 z-20 pointer-events-none mix-blend-hard-light"
+          style={{
+            opacity: tapeGlitch,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")`
+          }}
+        />
+
+        {/* HUD Top */}
+        <div className={`flex justify-between items-start font-hud text-xl md:text-3xl text-white tracking-widest drop-shadow-md transition-opacity duration-500 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              {mode === "REC" && <div className="w-4 h-4 md:w-6 md:h-6 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]" />}
+              {(mode === "PLAY" || mode === "DB_ACCESS") && <Play className="text-green-400 w-6 h-6" fill="currentColor" />}
+              {mode.includes("FF") && <FastForward className="text-yellow-400 w-6 h-6" fill="currentColor" />}
+              {mode.includes("REW") && <Rewind className="text-yellow-400 w-6 h-6" fill="currentColor" />}
+              <span className={`
+                ${mode === "REC" ? "text-red-500" : ""}
+                ${(mode === "PLAY" || mode === "DB_ACCESS") ? "text-green-400" : ""}
+                ${(mode.includes("FF") || mode.includes("REW")) ? "text-yellow-400" : ""}
+              `}>{mode}</span>
+            </div>
+            <span className="text-white/80 text-lg">{view === 'home' ? 'SP' : 'ARCHIVE'}</span>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2 text-green-400"><Battery className="w-8 h-8" /></div>
+            <span className="font-mono bg-black/50 px-2 rounded backdrop-blur-sm border border-white/20">{timecode}</span>
+          </div>
+        </div>
+
+        {/* Focus Brackets (Only in Home View) */}
+        {view === 'home' && (
+          <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-700 ${isPoweredOn ? 'scale-100 opacity-60' : 'scale-150 opacity-0'}`}>
+            <div className="w-[80vw] h-[60vh] md:w-[600px] md:h-[400px] border-2 border-white/30 relative">
+              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white/80 -mt-1 -ml-1" />
+              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white/80 -mt-1 -mr-1" />
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white/80 -mb-1 -ml-1" />
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white/80 -mb-1 -mr-1" />
+              <div className="absolute top-1/2 left-1/2 w-4 h-4 -translate-x-1/2 -translate-y-1/2">
+                <div className="w-full h-[2px] bg-white/50 absolute top-1/2" />
+                <div className="h-full w-[2px] bg-white/50 absolute left-1/2" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* HUD Bottom */}
+        <div className={`font-hud text-lg md:text-2xl text-white/80 flex justify-between items-end transition-opacity duration-1000 delay-500 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex flex-col">
+            <span className="text-yellow-300">JAN 02 1996</span>
+            <span className="text-sm">MEMPHIS_TAPE_{view === 'home' ? '01' : 'LIB'}</span>
+          </div>
+          {tapeGlitch > 0.5 && <span className="text-red-500 animate-pulse bg-black px-2">TRACKING ERROR</span>}
+        </div>
+      </div>
+
+      {/* --- CONTENT SWITCHER --- */}
+      {view === 'home' ? (
+        <HomeFlow
+          isPoweredOn={isPoweredOn}
+          onViewArchive={handleViewArchive}
+        />
+      ) : (
+        <ArchiveFlow
+          onBack={handleBackHome}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          episodes={filteredEpisodes}
+        />
+      )}
+
+    </div>
+  );
+}
+
+// --- SUB-COMPONENT: HOME VIEW (SCROLLABLE) ---
+function HomeFlow({ isPoweredOn, onViewArchive }) {
+  return (
+    <div className={`relative z-10 transition-opacity duration-300 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`}>
+      {/* SECTION 1: INTRO */}
+      <section className="section-intro h-screen flex flex-col items-center justify-center relative bg-zinc-900 border-b-4 border-pink-500 overflow-hidden">
+        <div className="absolute top-10 left-10 w-24 h-24 bg-yellow-400 rounded-full mix-blend-difference animate-bounce" />
+        <div className="absolute bottom-20 right-10 w-0 h-0 border-l-[50px] border-l-transparent border-t-[75px] border-t-cyan-400 border-r-[50px] border-r-transparent rotate-12" />
+
+        <h1 className="logo-main font-bungee text-6xl md:text-9xl text-center text-pink-500 drop-shadow-[4px_4px_0px_#00ffff] z-20 mx-4">
+          90'S BABY
+        </h1>
+        <p className="font-hud text-2xl md:text-4xl text-white mt-8 tracking-widest bg-black/80 px-4 py-1 rotate-1 border-2 border-yellow-400">
+          THE PODCAST
+        </p>
+        <div className="absolute bottom-10 animate-bounce text-white font-hud text-xl">
+          SCROLL TO INSERT TAPE ▼
+        </div>
+      </section>
+
+      {/* SECTION 2: HOSTS */}
+      <section className="py-20 bg-zinc-800 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#ffffff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
+        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 relative z-20">
+          <HostCard name="TEMI" role="THE SPARK" quote="Facts Only!" color="bg-cyan-400" secondary="bg-pink-500" icon={<Star className="w-16 h-16 text-black" />} />
+          <HostCard name="FRED" role="THE VIBE" quote="Hold tight..." color="bg-yellow-400" secondary="bg-purple-600" icon={<CassetteTape className="w-16 h-16 text-black" />} mt="md:mt-0" />
+          <HostCard name="VP" role="THE ENERGY" quote="Let's Go!" color="bg-pink-500" secondary="bg-yellow-400" icon={<Zap className="w-16 h-16 text-black" />} mt="md:mt-24" />
+        </div>
+      </section>
+
+      {/* SECTION 3: TAPE REEL */}
+      <div className="tape-track h-screen w-full bg-blue-900 overflow-hidden relative flex items-center">
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 10px, transparent 10px, transparent 20px)' }}></div>
+        <div className="absolute top-10 left-10 z-30 bg-red-600 text-white font-hud px-4 py-2 text-2xl border-4 border-white shadow-[4px_4px_0px_black]">RECENT EPISODES</div>
+
+        <div className="tape-reel flex pl-[20vw] gap-[20vw] w-max h-[60vh]">
+          <TapeSegment epNum="42" title="THE NOSTALGIA TRIP" tags={["Funny", "Deep Dive"]} color="bg-pink-600" lowerThird="Now Playing: Growing up w/o Internet" />
+          <TapeSegment epNum="43" title="SUMMER ANTHEMS" tags={["Music", "Debate"]} color="bg-purple-600" lowerThird="Guest: DJ Slick" />
+          <TapeSegment epNum="44" title="FASHION FAUX PAS" tags={["Roast"]} color="bg-green-600" lowerThird="Trend Report 1999" />
+
+          {/* ARCHIVE LINK CARD */}
+          <div onClick={onViewArchive} className="tape-segment w-[80vw] md:w-[60vw] h-full bg-zinc-800 border-8 border-white p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-zinc-700 transition-colors group">
+            <div className="absolute inset-0 bg-yellow-500/10 z-0"></div>
+            <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
+            <div className="z-10 text-center transform group-hover:scale-105 transition-transform duration-300">
+              <div className="bg-white text-black font-hud text-xl inline-block px-2 mb-4 border-2 border-black rotate-1">THE VAULT</div>
+              <h3 className="font-brand text-5xl md:text-7xl text-white mb-6 leading-tight drop-shadow-md">VIEW ALL<br />EPISODES</h3>
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 border-white bg-pink-500 text-white shadow-[4px_4px_0px_black] group-hover:bg-pink-400 group-hover:shadow-[6px_6px_0px_black] transition-all">
+                <FastForward className="w-10 h-10 fill-current" />
+              </div>
+            </div>
+            <div className="absolute bottom-10 left-0 w-full bg-gradient-to-r from-white to-transparent p-4 transform skew-x-12 -ml-8">
+              <div className="text-black font-hud text-2xl transform -skew-x-12 ml-10 flex items-center gap-2">
+                <span className="animate-pulse">●</span> Insert Next Tape...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 4: HIGHLIGHTS */}
+      <section className="py-24 bg-black relative">
+        <div className="container mx-auto px-6">
+          <div className="flex items-center gap-4 mb-12">
+            <div className="w-8 h-8 rounded-full bg-red-600 animate-pulse"></div>
+            <h2 className="font-brand text-5xl text-white">COMMUNITY CLIPS</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { title: "Funniest Moment", icon: <Mic />, color: "bg-pink-500" },
+              { title: "Heated Debate", icon: <Activity />, color: "bg-red-500" },
+              { title: "Wild Take", icon: <Radio />, color: "bg-yellow-400" },
+              { title: "Storytime", icon: <Disc />, color: "bg-blue-400" }
+            ].map((item, i) => (
+              <div key={i} className="aspect-video bg-zinc-800 border-4 border-zinc-700 relative group overflow-hidden cursor-pointer">
+                <div className={`absolute inset-0 opacity-20 ${item.color}`}></div>
+                <div className="absolute top-2 left-2 bg-black/70 text-white font-hud px-2 text-sm">{`00:1${i}:4${i}:00`}</div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <div className="text-white mb-2">{item.icon}</div>
+                  <h4 className="font-brand text-white text-xl text-center px-4">{item.title}</h4>
+                </div>
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5: OUTRO */}
+      <section className="section-outro h-[120vh] bg-zinc-900 relative">
+        <div className="h-[80vh] flex flex-col items-center justify-center">
+          <h2 className="font-brand text-6xl text-white mb-8 text-center">END OF TAPE</h2>
+          <div className="flex gap-6">
+            <button className="bg-pink-500 text-white font-brand text-2xl px-8 py-4 border-b-8 border-pink-700 active:border-b-0 active:translate-y-2 transition-all rounded hover:bg-pink-400">SUBSCRIBE</button>
+            <button className="bg-cyan-500 text-white font-brand text-2xl px-8 py-4 border-b-8 border-cyan-700 active:border-b-0 active:translate-y-2 transition-all rounded hover:bg-cyan-400">WATCH NEXT</button>
+          </div>
+        </div>
+        <div className="blue-screen absolute inset-0 bg-blue-700 z-50 opacity-0 flex items-center justify-center pointer-events-none">
+          <div className="text-white font-retro text-2xl md:text-4xl animate-pulse text-center">
+            <p>EJECTING TAPE...</p>
+            <p className="mt-4 text-sm font-hud">PLEASE REWIND</p>
+          </div>
+        </div>
+      </section>
+
+      {/* HOME TAPE SCRUB BAR */}
+      <div className="fixed bottom-0 left-0 w-full h-16 bg-zinc-900 border-t-4 border-zinc-700 z-40 flex items-center px-4 gap-4 shadow-lg">
+        <div className="font-hud text-zinc-500 text-xl hidden md:block">00:00</div>
+        <div className="flex-1 h-4 bg-zinc-800 rounded-full relative overflow-hidden border border-zinc-700 group cursor-grab">
+          <div className="absolute left-[10%] h-full w-[2px] bg-zinc-600"></div>
+          <div className="absolute left-[40%] h-full w-[2px] bg-zinc-600"></div>
+          <div className="absolute left-[80%] h-full w-[2px] bg-zinc-600"></div>
+          <div className="h-full bg-gradient-to-r from-pink-500 to-yellow-500 w-[10%] animate-pulse"></div>
+        </div>
+        <div className="font-hud text-zinc-500 text-xl hidden md:block">45:00</div>
+        <div className="text-zinc-400"><Radio className="w-5 h-5 text-red-500 animate-pulse" /></div>
+      </div>
+    </div>
+  );
+}
+
+// --- SUB-COMPONENT: ARCHIVE VIEW (FULL PAGE) ---
+function ArchiveFlow({ onBack, searchQuery, setSearchQuery, episodes }) {
+  return (
+    <div className="min-h-screen bg-zinc-900 pt-24 pb-12 px-4 md:px-12 relative z-30">
+      {/* Archive Header */}
+      <div className="flex flex-col md:flex-row justify-between items-end border-b-4 border-white pb-6 mb-12">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <div onClick={onBack} className="cursor-pointer hover:text-pink-500 transition-colors flex items-center gap-1 text-white font-hud text-xl">
+              <ChevronLeft /> EJECT / RETURN
+            </div>
+          </div>
+          <h1 className="font-brand text-5xl md:text-7xl text-white text-stroke-black drop-shadow-[4px_4px_0px_#ff00ff]">TAPE ARCHIVE</h1>
+        </div>
+
+        {/* Search Box */}
+        <div className="relative w-full md:w-96 mt-6 md:mt-0">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-zinc-400 font-bold" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-3 border-4 border-white bg-black text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 font-hud text-xl uppercase tracking-widest"
+            placeholder="SEARCH TAPES..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" onClick={() => setSearchQuery("")}>
+              <X className="h-5 w-5 text-zinc-400 hover:text-white" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {episodes.map((ep) => (
+          <div key={ep.id} className="group relative bg-zinc-800 border-4 border-zinc-700 hover:border-white transition-all duration-200 cursor-pointer">
+            {/* Tape Spine Visual */}
+            <div className={`h-4 w-full ${ep.color} border-b-4 border-zinc-900 flex items-center px-2 gap-1`}>
+              <div className="w-full h-[1px] bg-white/30"></div>
+            </div>
+
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <span className="font-hud text-2xl text-yellow-400">EP.{ep.id}</span>
+                <span className="font-hud text-zinc-400 text-lg">{ep.date}</span>
+              </div>
+
+              <h3 className="font-brand text-3xl text-white mb-6 leading-none group-hover:text-cyan-400 transition-colors">{ep.title}</h3>
+
+              <div className="flex flex-wrap gap-2 mb-8">
+                {ep.tags.map(tag => (
+                  <span key={tag} className="bg-black text-white font-mono text-xs px-2 py-1 border border-zinc-600 uppercase">{tag}</span>
+                ))}
+              </div>
+
+              <div className="flex justify-between items-center mt-auto">
+                <div className="text-zinc-500 font-hud text-sm">VHS-HQ</div>
+                <div className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center group-hover:bg-white group-hover:text-black text-white transition-all">
+                  <Play className="w-4 h-4 fill-current" />
+                </div>
+              </div>
+            </div>
+
+            {/* Hover Noise Overlay */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-10 pointer-events-none bg-white mix-blend-overlay transition-opacity" />
+          </div>
+        ))}
+
+        {episodes.length === 0 && (
+          <div className="col-span-full py-20 text-center font-hud text-2xl text-zinc-500">
+            NO TAPES FOUND IN DATABASE...
+          </div>
+        )}
+      </div>
+
+      {/* Archive Footer */}
+      <div className="mt-20 border-t-2 border-zinc-800 pt-8 text-center">
+        <p className="font-hud text-zinc-600">ARCHIVE SYSTEM v2.0 // 90S BABY LLC</p>
+      </div>
+    </div>
+  );
+}
+
+// --- HELPER COMPONENTS ---
+
+function HostCard({ name, role, quote, color, secondary, icon, mt = "mt-0" }) {
+  return (
+    <div className={`host-card group relative mt-12 ${mt}`}>
+      <div className={`absolute inset-0 ${color} transform translate-x-2 translate-y-2 border-4 border-black`}></div>
+      <div className={`relative ${secondary} border-4 border-black p-6 flex flex-col items-center hover:-translate-y-2 transition-transform duration-200`}>
+        <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-black mb-4 flex items-center justify-center">
+          {icon}
+        </div>
+        <h2 className="font-brand text-4xl text-white text-stroke-black mb-2">{name}</h2>
+        <p className="font-hud text-black bg-white px-2 text-lg">{role}</p>
+        <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 -left-8 -rotate-12">
+          <div className="bg-white border-2 border-black p-2 font-handwriting shadow-[4px_4px_0px_black]">"{quote}"</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TapeSegment({ epNum, title, tags, color, lowerThird }) {
+  return (
+    <div className="tape-segment w-[80vw] md:w-[60vw] h-full bg-zinc-900 border-8 border-white p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden">
+      <div className={`absolute inset-0 ${color} opacity-20 z-0`}></div>
+      <div className="z-10 text-center">
+        <div className="bg-black text-white font-hud text-xl inline-block px-2 mb-4">EPISODE {epNum}</div>
+        <h3 className="font-brand text-5xl md:text-7xl text-white mb-6 leading-tight">{title}</h3>
+        <div className="flex justify-center gap-4">
+          {tags.map((tag, i) => (
+            <span key={i} className={`bg-white text-black font-bold px-3 py-1 border-2 border-black ${i % 2 === 0 ? 'rotate-3' : '-rotate-2'}`}>{tag}</span>
+          ))}
+        </div>
+      </div>
+      <div className="absolute bottom-10 left-0 w-full bg-gradient-to-r from-blue-600 to-transparent p-4 transform skew-x-12 -ml-8">
+        <div className="text-white font-hud text-2xl transform -skew-x-12 ml-10">{lowerThird}</div>
+      </div>
+    </div>
+  );
+}
