@@ -513,6 +513,7 @@ export default function App() {
     const [view, setView] = useState("home"); // 'home' | 'archive' | 'contact'
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedVideo, setSelectedVideo] = useState(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const containerRef = useRef(null);
 
@@ -678,8 +679,16 @@ export default function App() {
                             {view === 'home' ? 'SP' : view === 'archive' ? 'ARCHIVE' : 'UPLINK'}
                         </span>
 
-                        {/* --- NAVIGATION MENU --- */}
-                        <nav className="mt-4 flex gap-4 md:gap-8 pointer-events-auto">
+                        {/* MOBILE MENU TOGGLE */}
+                        <button
+                            onClick={() => setIsMenuOpen(true)}
+                            className="md:hidden mt-2 pointer-events-auto bg-white text-black font-brand text-xs px-2 py-1 border-2 border-black flex items-center gap-2 active:translate-y-0.5"
+                        >
+                            <CassetteTape className="w-4 h-4" /> MENU
+                        </button>
+
+                        {/* --- NAVIGATION MENU (DESKTOP) --- */}
+                        <nav className="mt-4 hidden md:flex gap-4 md:gap-8 pointer-events-auto">
                             <button
                                 onClick={handleBackHome}
                                 className={`font-retro text-[10px] md:text-sm tracking-tighter px-2 py-1 border-2 transition-all ${view === 'home' ? 'bg-pink-500 border-white text-white shadow-[4px_4px_0px_white]' : 'bg-black/50 border-zinc-500 text-zinc-400 hover:border-pink-500 hover:text-white'}`}
@@ -729,6 +738,57 @@ export default function App() {
                         <span className="text-xs md:text-sm">MEMPHIS_TAPE_{view === 'home' ? '01' : 'LIB'}</span>
                     </div>
                     {tapeGlitch > 0.5 && <span className="text-red-500 animate-pulse bg-black px-2 text-xs md:text-sm">TRACKING ERROR</span>}
+                </div>
+            </div>
+
+            {/* --- MOBILE NAVIGATION MENU OVERLAY --- */}
+            <div className={`fixed inset-0 z-[100] bg-black/95 transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                {/* Visual Chaos/Noise */}
+                <div className="absolute inset-0 bg-noise opacity-10 pointer-events-none" />
+                <div className="absolute top-0 right-0 p-8">
+                    <button
+                        onClick={() => setIsMenuOpen(false)}
+                        className="text-white font-hud text-2xl flex items-center gap-2 hover:text-pink-500 transition-colors"
+                    >
+                        [X] CLOSE
+                    </button>
+                </div>
+
+                <div className="h-full flex flex-col justify-center items-center gap-12 p-8">
+                    <div className="text-pink-500 font-brand text-xl tracking-tighter -rotate-3 bg-white px-2 border-2 border-black mb-4">SELECT MODE:</div>
+
+                    <button
+                        onClick={() => { handleBackHome(); setIsMenuOpen(false); }}
+                        className={`group relative text-5xl font-brand ${view === 'home' ? 'text-pink-500' : 'text-white'} hover:scale-110 transition-transform`}
+                    >
+                        <span className="relative z-10">HOME</span>
+                        {view === 'home' && <div className="absolute -inset-2 bg-white -z-10 -rotate-2 border-4 border-black shadow-[4px_4px_0px_#00ffff]" />}
+                    </button>
+
+                    <button
+                        onClick={() => { handleViewArchive(); setIsMenuOpen(false); }}
+                        className={`group relative text-5xl font-brand ${view === 'archive' ? 'text-cyan-400' : 'text-white'} hover:scale-110 transition-transform`}
+                    >
+                        <span className="relative z-10">ARCHIVE</span>
+                        {view === 'archive' && <div className="absolute -inset-2 bg-white -z-10 rotate-2 border-4 border-black shadow-[4px_4px_0px_#ff00ff]" />}
+                    </button>
+
+                    <button
+                        onClick={() => { handleViewContact(); setIsMenuOpen(false); }}
+                        className={`group relative text-5xl font-brand ${view === 'contact' ? 'text-yellow-400' : 'text-white'} hover:scale-110 transition-transform`}
+                    >
+                        <span className="relative z-10">UPLINK</span>
+                        {view === 'contact' && <div className="absolute -inset-2 bg-white -z-10 rotate-1 border-4 border-black shadow-[4px_4px_0px_#00ffff]" />}
+                    </button>
+
+                    <div className="mt-12 flex flex-col items-center gap-4 border-t-2 border-white/20 pt-8 w-full max-w-xs">
+                        <p className="font-hud text-zinc-500 text-sm">90s BABY OS v2.0</p>
+                        <div className="flex gap-4">
+                            <div className="h-2 w-12 bg-red-600 animate-pulse" />
+                            <div className="h-2 w-12 bg-green-500 animate-pulse" />
+                            <div className="h-2 w-12 bg-blue-500 animate-pulse" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
