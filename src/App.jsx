@@ -420,6 +420,8 @@ const ArchiveFlow = React.memo(({ onBack, searchQuery, setSearchQuery, episodes,
 // --- SUB-COMPONENT: CONTACT FLOW (REDESIGNED) ---
 const ContactFlow = React.memo(({ onBack }) => {
     const [isGuest, setIsGuest] = useState(false);
+    const [isSponsor, setIsSponsor] = useState(false);
+    const [isMember, setIsMember] = useState(false);
 
     return (
         <div className="min-h-screen bg-zinc-900 pt-24 pb-32 px-4 md:px-12 relative z-30 overflow-hidden">
@@ -493,6 +495,56 @@ const ContactFlow = React.memo(({ onBack }) => {
                                         rows="3"
                                         className="w-full bg-yellow-100 border-4 border-black p-4 font-hud text-xl text-black focus:outline-none focus:bg-yellow-200 placeholder-black/50"
                                         placeholder="WHAT'S THE TOPIC? DON'T BE BORING..."
+                                    ></textarea>
+                                </div>
+                            )}
+
+                            {/* Sponsor Toggle */}
+                            <div
+                                className={`cursor-pointer border-4 border-black p-4 transition-all duration-200 relative ${isSponsor ? 'bg-yellow-400 text-black' : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'}`}
+                                onClick={() => setIsSponsor(!isSponsor)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="font-brand text-2xl md:text-3xl">SPONSOR US</span>
+                                    <div className={`w-8 h-8 border-4 border-black bg-white flex items-center justify-center`}>
+                                        {isSponsor && <div className="w-4 h-4 bg-black"></div>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Dynamic Sponsor Section */}
+                            {isSponsor && (
+                                <div className="relative animate-in slide-in-from-top-2 fade-in duration-300">
+                                    <div className="absolute -left-4 top-4 -rotate-90 text-yellow-500 font-brand hidden md:block">$$$$</div>
+                                    <textarea
+                                        rows="3"
+                                        className="w-full bg-yellow-100 border-4 border-black p-4 font-hud text-xl text-black focus:outline-none focus:bg-yellow-200 placeholder-black/50"
+                                        placeholder="TELL US ABOUT YOUR BRAND / SPONSORSHIP IDEA..."
+                                    ></textarea>
+                                </div>
+                            )}
+
+                            {/* Member Toggle */}
+                            <div
+                                className={`cursor-pointer border-4 border-black p-4 transition-all duration-200 relative ${isMember ? 'bg-cyan-400 text-black' : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'}`}
+                                onClick={() => setIsMember(!isMember)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="font-brand text-2xl md:text-3xl">BECOME A MEMBER</span>
+                                    <div className={`w-8 h-8 border-4 border-black bg-white flex items-center justify-center`}>
+                                        {isMember && <div className="w-4 h-4 bg-black"></div>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Dynamic Member Section */}
+                            {isMember && (
+                                <div className="relative animate-in slide-in-from-top-2 fade-in duration-300">
+                                    <div className="absolute -left-4 top-4 -rotate-90 text-cyan-500 font-brand hidden md:block">JOIN</div>
+                                    <textarea
+                                        rows="3"
+                                        className="w-full bg-cyan-100 border-4 border-black p-4 font-hud text-xl text-black focus:outline-none focus:bg-cyan-200 placeholder-black/50"
+                                        placeholder="WHY DO YOU WANT TO JOIN THE 90S BABY CREW?"
                                     ></textarea>
                                 </div>
                             )}
