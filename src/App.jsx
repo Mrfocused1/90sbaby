@@ -49,13 +49,17 @@ const SHOW_INFO = {
 
 // --- HELPER COMPONENTS ---
 
-const HostCard = React.memo(({ name, role, quote, color, secondary, icon, mt = "mt-0", customClasses = "" }) => {
+const HostCard = React.memo(({ name, role, quote, color, secondary, icon, image, mt = "mt-0", customClasses = "" }) => {
     return (
         <div className={`host-card group relative ${mt} ${customClasses}`}>
             <div className={`absolute inset-0 ${color} transform translate-x-2 translate-y-2 border-4 border-black`}></div>
             <div className={`relative ${secondary} border-4 border-black p-6 flex flex-col items-center hover:-translate-y-2 transition-transform duration-200`}>
-                <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-black mb-4 flex items-center justify-center">
-                    {icon}
+                <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-black mb-4 flex items-center justify-center overflow-hidden">
+                    {image ? (
+                        <img src={image} alt={name} className="w-full h-full object-cover" />
+                    ) : (
+                        icon
+                    )}
                 </div>
                 <h2 className="font-brand text-4xl text-white text-stroke-black mb-2">{name}</h2>
                 <p className="font-hud text-black bg-white px-2 text-lg">{role}</p>
@@ -163,7 +167,7 @@ const HomeFlow = React.memo(({ isPoweredOn, onViewArchive, onViewContact, onVide
                         quote="Hold tight..."
                         color="bg-yellow-400"
                         secondary="bg-purple-600"
-                        icon={<CassetteTape className="w-16 h-16 text-black" />}
+                        image="/images/fred.png"
                         customClasses="rotate-2 mb-[-60px] md:mb-0 md:mt-12"
                     />
                     <HostCard
