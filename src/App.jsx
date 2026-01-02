@@ -167,7 +167,7 @@ const HomeFlow = React.memo(({ isPoweredOn, onViewArchive, onViewContact, onVide
                         quote="Hold tight..."
                         color="bg-yellow-400"
                         secondary="bg-purple-600"
-                        image="/images/fred.png"
+                        icon={<CassetteTape className="w-16 h-16 text-black" />}
                         customClasses="rotate-2 mb-[-60px] md:mb-0 md:mt-12"
                     />
                     <HostCard
