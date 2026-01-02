@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { Play, Pause, FastForward, Rewind, Battery, Disc, Zap, Star, CassetteTape, Radio, Mic, Activity, Search, X, ChevronLeft } from 'lucide-react';
+import { Play, Pause, FastForward, Rewind, Battery, Disc, Zap, Star, CassetteTape, Radio, Mic, Activity, Search, X, ChevronLeft, Phone, Mail, Send, User, MessageSquare, Youtube, Music, Instagram as InstagramIcon, Linkedin } from 'lucide-react';
+import { EPISODE_DB } from './episodeData.js';
 
 /* --- GSAP CDN INJECTION HELPER --- */
 const useGSAP = () => {
@@ -29,18 +30,23 @@ const useGSAP = () => {
   return ready;
 };
 
-/* --- MOCK DATA FOR ARCHIVE --- */
-const EPISODE_DB = [
-  { id: 44, title: "FASHION FAUX PAS", date: "JAN 1999", tags: ["Roast", "Style"], color: "bg-green-600" },
-  { id: 43, title: "SUMMER ANTHEMS", date: "JUN 1998", tags: ["Music", "Debate"], color: "bg-purple-600" },
-  { id: 42, title: "THE NOSTALGIA TRIP", date: "DEC 1997", tags: ["Funny", "Deep Dive"], color: "bg-pink-600" },
-  { id: 41, title: "SCHOOL DAZE", date: "SEP 1997", tags: ["Storytime", "Cringe"], color: "bg-yellow-500" },
-  { id: 40, title: "CONSOLE WARS", date: "AUG 1997", tags: ["Gaming", "Sega"], color: "bg-blue-600" },
-  { id: 39, title: "SATURDAY CARTOONS", date: "JUL 1997", tags: ["TV", "Classics"], color: "bg-red-600" },
-  { id: 38, title: "MIX TAPE MASTERY", date: "MAY 1997", tags: ["Music", "Love"], color: "bg-cyan-600" },
-  { id: 37, title: "BLOCKBUSTER NIGHTS", date: "APR 1997", tags: ["Movies", "Weekend"], color: "bg-orange-500" },
-  { id: 36, title: "THE PAGERS ERA", date: "MAR 1997", tags: ["Tech", "Beep"], color: "bg-zinc-600" },
-];
+/* --- REAL 90s BABY SHOW DATA --- */
+const SHOW_INFO = {
+  description: "90s Baby Show is an award winning entertainment, TV & Film platform hosted by Fred Santana, Temi Alchemy and VP. We provide an unfiltered platform for established and emerging creatives. We aim to bridge the gap between generations through lighthearted conversation about everyday life, relationships, popular culture, TV & films and more.",
+  hosts: [
+    { name: "FRED SANTANA", role: "THE VIBE", handle: "@Fr3dSantana" },
+    { name: "TEMI ALCHEMY", role: "THE SPARK", handle: "@temiAlchemy" },
+    { name: "VP", role: "THE ENERGY", handle: "@VPinthecut" }
+  ],
+  social: {
+    youtube: "https://www.youtube.com/@90sBabyShow",
+    spotify: "https://open.spotify.com/show/2ENRq1TqQG1wPiGyuC7Bxa",
+    instagram: "https://www.instagram.com/90sbabyshow/",
+    tiktok: "https://www.tiktok.com/@90sbabyshow",
+    linkedin: "https://uk.linkedin.com/company/90s-baby-show"
+  }
+};
+
 
 export default function App() {
   const gsapReady = useGSAP();
@@ -48,8 +54,9 @@ export default function App() {
   const [timecode, setTimecode] = useState("00:00:00:00");
   const [mode, setMode] = useState("STANDBY");
   const [tapeGlitch, setTapeGlitch] = useState(0);
-  const [view, setView] = useState("home"); // 'home' | 'archive'
+  const [view, setView] = useState("home"); // 'home' | 'archive' | 'contact'
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
   const containerRef = useRef(null);
 
@@ -67,7 +74,6 @@ export default function App() {
     const ctx = window.gsap.context(() => {
       const tl = window.gsap.timeline();
 
-      // 1. Initial Power On Animation (only runs once realistically, but safe to keep)
       tl.fromTo(".viewfinder-inner",
         { scaleY: 0.01, scaleX: 0.8, opacity: 0 },
         { scaleY: 1, scaleX: 1, opacity: 1, duration: 0.4, ease: "power2.out" }
@@ -75,7 +81,6 @@ export default function App() {
         .to(".viewfinder-overlay", { opacity: 1, duration: 0.2 })
         .add(() => setMode("REC"));
 
-      // 2. Scroll-based Timecode & Glitch
       window.ScrollTrigger.create({
         trigger: containerRef.current,
         start: "top top",
@@ -102,7 +107,6 @@ export default function App() {
         }
       });
 
-      // 3. Section Animations
       window.gsap.from(".logo-main", {
         scrollTrigger: { trigger: ".section-intro", start: "top center", scrub: 1 },
         scale: 0.5, opacity: 0, rotation: -10
@@ -116,7 +120,6 @@ export default function App() {
         });
       });
 
-      // Horizontal Scroll Fix
       const reel = containerRef.current.querySelector(".tape-reel");
       if (reel) {
         const getScrollAmount = () => -(reel.scrollWidth - window.innerWidth);
@@ -134,12 +137,7 @@ export default function App() {
       }
 
       window.gsap.to(".blue-screen", {
-        scrollTrigger: {
-          trigger: ".section-outro",
-          start: "center center",
-          end: "bottom bottom",
-          scrub: true
-        },
+        scrollTrigger: { trigger: ".section-outro", start: "center center", end: "bottom bottom", scrub: true },
         opacity: 1
       });
 
@@ -151,9 +149,19 @@ export default function App() {
   // Handle View Switching
   const handleViewArchive = () => {
     setMode("DB_ACCESS");
-    setTapeGlitch(0.8); // Glitch transition
+    setTapeGlitch(0.8);
     setTimeout(() => {
       setView("archive");
+      setTapeGlitch(0);
+      window.scrollTo(0, 0);
+    }, 500);
+  };
+
+  const handleViewContact = () => {
+    setMode("INPUT_MODE");
+    setTapeGlitch(0.8);
+    setTimeout(() => {
+      setView("contact");
       setTapeGlitch(0);
       window.scrollTo(0, 0);
     }, 500);
@@ -212,16 +220,40 @@ export default function App() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               {mode === "REC" && <div className="w-4 h-4 md:w-6 md:h-6 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]" />}
-              {(mode === "PLAY" || mode === "DB_ACCESS") && <Play className="text-green-400 w-6 h-6" fill="currentColor" />}
+              {(mode === "PLAY" || mode === "DB_ACCESS" || mode === "INPUT_MODE") && <Play className="text-green-400 w-6 h-6" fill="currentColor" />}
               {mode.includes("FF") && <FastForward className="text-yellow-400 w-6 h-6" fill="currentColor" />}
               {mode.includes("REW") && <Rewind className="text-yellow-400 w-6 h-6" fill="currentColor" />}
               <span className={`
                 ${mode === "REC" ? "text-red-500" : ""}
-                ${(mode === "PLAY" || mode === "DB_ACCESS") ? "text-green-400" : ""}
+                ${(mode === "PLAY" || mode === "DB_ACCESS" || mode === "INPUT_MODE") ? "text-green-400" : ""}
                 ${(mode.includes("FF") || mode.includes("REW")) ? "text-yellow-400" : ""}
               `}>{mode}</span>
             </div>
-            <span className="text-white/80 text-lg">{view === 'home' ? 'SP' : 'ARCHIVE'}</span>
+            <span className="text-white/80 text-lg">
+              {view === 'home' ? 'SP' : view === 'archive' ? 'ARCHIVE' : 'UPLINK'}
+            </span>
+
+            {/* --- NAVIGATION MENU --- */}
+            <nav className="mt-4 flex gap-4 md:gap-8 pointer-events-auto">
+              <button
+                onClick={handleBackHome}
+                className={`font-retro text-[10px] md:text-sm tracking-tighter px-2 py-1 border-2 transition-all ${view === 'home' ? 'bg-pink-500 border-white text-white shadow-[4px_4px_0px_white]' : 'bg-black/50 border-zinc-500 text-zinc-400 hover:border-pink-500 hover:text-white'}`}
+              >
+                HOME
+              </button>
+              <button
+                onClick={handleViewArchive}
+                className={`font-retro text-[10px] md:text-sm tracking-tighter px-2 py-1 border-2 transition-all ${view === 'archive' ? 'bg-cyan-500 border-white text-white shadow-[4px_4px_0px_white]' : 'bg-black/50 border-zinc-500 text-zinc-400 hover:border-cyan-500 hover:text-white'}`}
+              >
+                EPISODES
+              </button>
+              <button
+                onClick={handleViewContact}
+                className={`font-retro text-[10px] md:text-sm tracking-tighter px-2 py-1 border-2 transition-all ${view === 'contact' ? 'bg-yellow-400 border-white text-black shadow-[4px_4px_0px_white]' : 'bg-black/50 border-zinc-500 text-zinc-400 hover:border-yellow-400 hover:text-white'}`}
+              >
+                CONTACT
+              </button>
+            </nav>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2 text-green-400"><Battery className="w-8 h-8" /></div>
@@ -260,14 +292,41 @@ export default function App() {
         <HomeFlow
           isPoweredOn={isPoweredOn}
           onViewArchive={handleViewArchive}
+          onViewContact={handleViewContact}
+          onVideoSelect={setSelectedVideo}
         />
-      ) : (
+      ) : view === 'archive' ? (
         <ArchiveFlow
           onBack={handleBackHome}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           episodes={filteredEpisodes}
+          onVideoSelect={setSelectedVideo}
         />
+      ) : (
+        <ContactFlow onBack={handleBackHome} />
+      )}
+
+      {/* YouTube Video Modal */}
+      {selectedVideo && (
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 pointer-events-auto" onClick={() => setSelectedVideo(null)}>
+          <div className="relative w-full max-w-5xl aspect-video" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setSelectedVideo(null)}
+              className="absolute -top-12 right-0 text-white font-hud text-2xl hover:text-pink-500 transition-colors pointer-events-auto"
+            >
+              CLOSE [X]
+            </button>
+            <iframe
+              className="w-full h-full border-4 border-white"
+              src={`https://www.youtube.com/embed/${selectedVideo}?autoplay=1`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
       )}
 
     </div>
@@ -275,7 +334,9 @@ export default function App() {
 }
 
 // --- SUB-COMPONENT: HOME VIEW (SCROLLABLE) ---
-function HomeFlow({ isPoweredOn, onViewArchive }) {
+function HomeFlow({ isPoweredOn, onViewArchive, onViewContact, onVideoSelect }) {
+  const latestEpisodes = EPISODE_DB.slice(0, 6);
+
   return (
     <div className={`relative z-10 transition-opacity duration-300 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`}>
       {/* SECTION 1: INTRO */}
@@ -294,25 +355,61 @@ function HomeFlow({ isPoweredOn, onViewArchive }) {
         </div>
       </section>
 
-      {/* SECTION 2: HOSTS */}
+      {/* SECTION 2: ABOUT */}
+      <section className="py-20 bg-black relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 20px)' }}></div>
+        <div className="container mx-auto px-6 max-w-4xl relative z-20">
+          <div className="bg-zinc-900 border-4 border-pink-500 p-8 md:p-12 transform -rotate-1 shadow-[12px_12px_0px_#00ffff]">
+            <h2 className="font-brand text-4xl md:text-6xl text-yellow-400 mb-6 text-center">AWARD WINNING SHOW</h2>
+            <p className="font-hud text-xl md:text-2xl text-white leading-relaxed text-center">
+              {SHOW_INFO.description}
+            </p>
+            <div className="mt-8 flex justify-center gap-6 flex-wrap pointer-events-auto">
+              <a href={SHOW_INFO.social.youtube} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-400 transition-colors">
+                <Youtube className="w-10 h-10" />
+              </a>
+              <a href={SHOW_INFO.social.spotify} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 transition-colors">
+                <Music className="w-10 h-10" />
+              </a>
+              <a href={SHOW_INFO.social.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-400 transition-colors">
+                <InstagramIcon className="w-10 h-10" />
+              </a>
+              <a href={SHOW_INFO.social.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
+                <Linkedin className="w-10 h-10" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3: HOSTS */}
       <section className="py-20 bg-zinc-800 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#ffffff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 relative z-20">
-          <HostCard name="TEMI" role="THE SPARK" quote="Facts Only!" color="bg-cyan-400" secondary="bg-pink-500" icon={<Star className="w-16 h-16 text-black" />} />
-          <HostCard name="FRED" role="THE VIBE" quote="Hold tight..." color="bg-yellow-400" secondary="bg-purple-600" icon={<CassetteTape className="w-16 h-16 text-black" />} mt="md:mt-0" />
+          <HostCard name="FRED" role="THE VIBE" quote="Hold tight..." color="bg-yellow-400" secondary="bg-purple-600" icon={<CassetteTape className="w-16 h-16 text-black" />} />
+          <HostCard name="TEMI" role="THE SPARK" quote="Facts Only!" color="bg-cyan-400" secondary="bg-pink-500" icon={<Star className="w-16 h-16 text-black" />} mt="md:mt-0" />
           <HostCard name="VP" role="THE ENERGY" quote="Let's Go!" color="bg-pink-500" secondary="bg-yellow-400" icon={<Zap className="w-16 h-16 text-black" />} mt="md:mt-24" />
         </div>
       </section>
 
-      {/* SECTION 3: TAPE REEL */}
+      {/* SECTION 4: TAPE REEL - REAL EPISODES */}
       <div className="tape-track h-screen w-full bg-blue-900 overflow-hidden relative flex items-center">
         <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 10px, transparent 10px, transparent 20px)' }}></div>
-        <div className="absolute top-10 left-10 z-30 bg-red-600 text-white font-hud px-4 py-2 text-2xl border-4 border-white shadow-[4px_4px_0px_black]">RECENT EPISODES</div>
+        <div className="absolute top-10 left-10 z-30 bg-red-600 text-white font-hud px-4 py-2 text-2xl border-4 border-white shadow-[4px_4px_0px_black]">LATEST EPISODES</div>
 
         <div className="tape-reel flex pl-[20vw] gap-[20vw] w-max h-[60vh]">
-          <TapeSegment epNum="42" title="THE NOSTALGIA TRIP" tags={["Funny", "Deep Dive"]} color="bg-pink-600" lowerThird="Now Playing: Growing up w/o Internet" />
-          <TapeSegment epNum="43" title="SUMMER ANTHEMS" tags={["Music", "Debate"]} color="bg-purple-600" lowerThird="Guest: DJ Slick" />
-          <TapeSegment epNum="44" title="FASHION FAUX PAS" tags={["Roast"]} color="bg-green-600" lowerThird="Trend Report 1999" />
+          {latestEpisodes.map((ep, idx) => (
+            <TapeSegment
+              key={ep.id}
+              epNum={ep.id.toString()}
+              title={ep.title}
+              tags={ep.tags}
+              color={ep.color}
+              lowerThird={`${ep.date} • Click to Watch`}
+              onClick={() => onVideoSelect(ep.youtubeId)}
+              thumbnail={ep.thumbnail}
+            />
+          ))}
 
           {/* ARCHIVE LINK CARD */}
           <div onClick={onViewArchive} className="tape-segment w-[80vw] md:w-[60vw] h-full bg-zinc-800 border-8 border-white p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-zinc-700 transition-colors group">
@@ -334,7 +431,7 @@ function HomeFlow({ isPoweredOn, onViewArchive }) {
         </div>
       </div>
 
-      {/* SECTION 4: HIGHLIGHTS */}
+      {/* SECTION 5: HIGHLIGHTS */}
       <section className="py-24 bg-black relative">
         <div className="container mx-auto px-6">
           <div className="flex items-center gap-4 mb-12">
@@ -362,14 +459,17 @@ function HomeFlow({ isPoweredOn, onViewArchive }) {
         </div>
       </section>
 
-      {/* SECTION 5: OUTRO */}
+      {/* SECTION 6: OUTRO */}
       <section className="section-outro h-[120vh] bg-zinc-900 relative">
-        <div className="h-[80vh] flex flex-col items-center justify-center">
-          <h2 className="font-brand text-6xl text-white mb-8 text-center">END OF TAPE</h2>
-          <div className="flex gap-6">
-            <button className="bg-pink-500 text-white font-brand text-2xl px-8 py-4 border-b-8 border-pink-700 active:border-b-0 active:translate-y-2 transition-all rounded hover:bg-pink-400">SUBSCRIBE</button>
-            <button className="bg-cyan-500 text-white font-brand text-2xl px-8 py-4 border-b-8 border-cyan-700 active:border-b-0 active:translate-y-2 transition-all rounded hover:bg-cyan-400">WATCH NEXT</button>
+        <div className="h-[80vh] flex flex-col items-center justify-center gap-8">
+          <h2 className="font-brand text-6xl text-white text-center">END OF TAPE</h2>
+          <div className="flex gap-6 pointer-events-auto">
+            <a href={SHOW_INFO.social.youtube} target="_blank" rel="noopener noreferrer" className="bg-pink-500 text-white font-brand text-2xl px-8 py-4 border-b-8 border-pink-700 active:border-b-0 active:translate-y-2 transition-all rounded hover:bg-pink-400">SUBSCRIBE</a>
+            <button onClick={onViewArchive} className="bg-cyan-500 text-white font-brand text-2xl px-8 py-4 border-b-8 border-cyan-700 active:border-b-0 active:translate-y-2 transition-all rounded hover:bg-cyan-400">WATCH NEXT</button>
           </div>
+          <button onClick={onViewContact} className="text-white font-hud text-xl hover:text-yellow-400 transition-colors flex items-center gap-2 mt-4 border-b border-dashed border-white/50 pb-1 pointer-events-auto">
+            &gt; CONTACT STUDIO / GUEST INQUIRY
+          </button>
         </div>
         <div className="blue-screen absolute inset-0 bg-blue-700 z-50 opacity-0 flex items-center justify-center pointer-events-none">
           <div className="text-white font-retro text-2xl md:text-4xl animate-pulse text-center">
@@ -396,22 +496,33 @@ function HomeFlow({ isPoweredOn, onViewArchive }) {
 }
 
 // --- SUB-COMPONENT: ARCHIVE VIEW (FULL PAGE) ---
-function ArchiveFlow({ onBack, searchQuery, setSearchQuery, episodes }) {
+function ArchiveFlow({ onBack, searchQuery, setSearchQuery, episodes, onVideoSelect }) {
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  // Reset visible count when search changes
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [searchQuery]);
+
+  const visibleEpisodes = episodes.slice(0, visibleCount);
+  const totalCount = episodes.length;
+
   return (
     <div className="min-h-screen bg-zinc-900 pt-24 pb-12 px-4 md:px-12 relative z-30">
       {/* Archive Header */}
       <div className="flex flex-col md:flex-row justify-between items-end border-b-4 border-white pb-6 mb-12">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <div onClick={onBack} className="cursor-pointer hover:text-pink-500 transition-colors flex items-center gap-1 text-white font-hud text-xl">
+            <div onClick={onBack} className="cursor-pointer hover:text-pink-500 transition-colors flex items-center gap-1 text-white font-hud text-xl pointer-events-auto">
               <ChevronLeft /> EJECT / RETURN
             </div>
           </div>
           <h1 className="font-brand text-5xl md:text-7xl text-white text-stroke-black drop-shadow-[4px_4px_0px_#ff00ff]">TAPE ARCHIVE</h1>
+          <p className="font-hud text-zinc-400 mt-2">TOTAL TAPES: {totalCount}</p>
         </div>
 
         {/* Search Box */}
-        <div className="relative w-full md:w-96 mt-6 md:mt-0">
+        <div className="relative w-full md:w-96 mt-6 md:mt-0 pointer-events-auto">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-zinc-400 font-bold" />
           </div>
@@ -432,8 +543,27 @@ function ArchiveFlow({ onBack, searchQuery, setSearchQuery, episodes }) {
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {episodes.map((ep) => (
-          <div key={ep.id} className="group relative bg-zinc-800 border-4 border-zinc-700 hover:border-white transition-all duration-200 cursor-pointer">
+        {visibleEpisodes.map((ep) => (
+          <div
+            key={ep.id}
+            onClick={() => onVideoSelect(ep.youtubeId)}
+            className="group relative bg-zinc-800 border-4 border-zinc-700 hover:border-white transition-all duration-200 cursor-pointer pointer-events-auto"
+          >
+            {/* Thumbnail */}
+            <div className="relative h-48 overflow-hidden bg-black">
+              <img
+                src={ep.thumbnail}
+                alt={ep.title}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                onError={(e) => {
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23000" width="100" height="100"/%3E%3Ctext fill="%23fff" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3E90s Baby%3C/text%3E%3C/svg%3E';
+                }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50">
+                <Play className="w-16 h-16 text-white fill-current" />
+              </div>
+            </div>
+
             {/* Tape Spine Visual */}
             <div className={`h-4 w-full ${ep.color} border-b-4 border-zinc-900 flex items-center px-2 gap-1`}>
               <div className="w-full h-[1px] bg-white/30"></div>
@@ -445,7 +575,7 @@ function ArchiveFlow({ onBack, searchQuery, setSearchQuery, episodes }) {
                 <span className="font-hud text-zinc-400 text-lg">{ep.date}</span>
               </div>
 
-              <h3 className="font-brand text-3xl text-white mb-6 leading-none group-hover:text-cyan-400 transition-colors">{ep.title}</h3>
+              <h3 className="font-brand text-2xl text-white mb-6 leading-tight group-hover:text-cyan-400 transition-colors line-clamp-2">{ep.title}</h3>
 
               <div className="flex flex-wrap gap-2 mb-8">
                 {ep.tags.map(tag => (
@@ -454,7 +584,7 @@ function ArchiveFlow({ onBack, searchQuery, setSearchQuery, episodes }) {
               </div>
 
               <div className="flex justify-between items-center mt-auto">
-                <div className="text-zinc-500 font-hud text-sm">VHS-HQ</div>
+                <div className="text-zinc-500 font-hud text-sm">YOUTUBE</div>
                 <div className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center group-hover:bg-white group-hover:text-black text-white transition-all">
                   <Play className="w-4 h-4 fill-current" />
                 </div>
@@ -465,17 +595,139 @@ function ArchiveFlow({ onBack, searchQuery, setSearchQuery, episodes }) {
             <div className="absolute inset-0 opacity-0 group-hover:opacity-10 pointer-events-none bg-white mix-blend-overlay transition-opacity" />
           </div>
         ))}
-
-        {episodes.length === 0 && (
-          <div className="col-span-full py-20 text-center font-hud text-2xl text-zinc-500">
-            NO TAPES FOUND IN DATABASE...
-          </div>
-        )}
       </div>
+
+      {totalCount === 0 && (
+        <div className="col-span-full py-20 text-center font-hud text-2xl text-zinc-500">
+          NO TAPES FOUND IN DATABASE...
+        </div>
+      )}
+
+      {visibleCount < totalCount && (
+        <div className="mt-12 flex justify-center">
+          <button
+            onClick={() => setVisibleCount(prev => prev + 12)}
+            className="font-brand text-2xl bg-white text-black px-12 py-4 border-4 border-black shadow-[8px_8px_0px_#ff00ff] hover:bg-pink-500 hover:text-white hover:shadow-[12px_12px_0px_white] transition-all pointer-events-auto active:translate-y-1 active:translate-x-1 active:shadow-none"
+          >
+            LOAD MORE TAPES...
+          </button>
+        </div>
+      )}
 
       {/* Archive Footer */}
       <div className="mt-20 border-t-2 border-zinc-800 pt-8 text-center">
         <p className="font-hud text-zinc-600">ARCHIVE SYSTEM v2.0 // 90S BABY LLC</p>
+      </div>
+    </div>
+  );
+}
+
+// --- SUB-COMPONENT: CONTACT FLOW (REDESIGNED) ---
+function ContactFlow({ onBack }) {
+  const [isGuest, setIsGuest] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-zinc-900 pt-24 pb-32 px-4 md:px-12 relative z-30 overflow-hidden">
+      {/* Background Chaos */}
+      <div className="absolute top-20 right-[-100px] w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+      <div className="absolute bottom-[-50px] left-[-50px] w-80 h-80 bg-yellow-400 rotate-12 opacity-10"></div>
+
+      {/* Header Section */}
+      <div className="relative mb-12 text-center">
+        <div onClick={onBack} className="absolute left-0 top-0 cursor-pointer hover:text-pink-500 transition-colors flex items-center gap-1 text-white font-hud text-xl bg-black/50 px-2 py-1 border border-white/30 z-50 pointer-events-auto">
+          <ChevronLeft /> EJECT
+        </div>
+
+        <h1 className="font-brand text-6xl md:text-8xl text-yellow-400 text-stroke-black drop-shadow-[8px_8px_0px_#ff00ff] -rotate-2 inline-block">
+          HIT US UP!
+        </h1>
+        <div className="bg-cyan-400 text-black font-hud text-2xl px-4 py-1 rotate-2 inline-block border-4 border-black shadow-[4px_4px_0px_black] relative -top-8 -left-4">
+          LINES ARE OPEN
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto relative">
+        {/* Form Container: "The Clipboard/Notebook" Look */}
+        <div className="bg-white p-2 md:p-8 transform rotate-1 border-4 border-black shadow-[16px_16px_0px_#00ffff] relative">
+
+          {/* Decorative Tape/Stickers */}
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/20 w-32 h-8 rotate-1"></div>
+          <div className="absolute -top-8 right-10 rotate-12 bg-yellow-300 text-black font-handwriting p-4 border-2 border-black shadow-[4px_4px_0px_black] hidden md:block">
+            <p className="font-brand leading-none text-center">DON'T BE<br />SHY!</p>
+          </div>
+
+          <div className="border-4 border-black border-dashed p-6 md:p-10 bg-zinc-100">
+
+            <p className="font-hud text-xl md:text-2xl text-black mb-8 text-center leading-relaxed">
+              YO! WANT TO ROAST A HOST? SHARE A 90S MEMORY? <br />
+              OR MAYBE YOU THINK YOU HAVE THE <span className="bg-pink-500 text-white px-1">RIZZ</span> TO BE A GUEST?
+            </p>
+
+            <form className="flex flex-col gap-8 pointer-events-auto">
+
+              {/* Inputs Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-black translate-x-2 translate-y-2 group-focus-within:translate-x-3 group-focus-within:translate-y-3 transition-transform"></div>
+                  <input type="text" className="relative w-full bg-white border-4 border-black p-4 font-hud text-2xl text-black focus:outline-none focus:bg-yellow-50 placeholder-zinc-400 uppercase" placeholder="NAME / ALIAS" />
+                </div>
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-black translate-x-2 translate-y-2 group-focus-within:translate-x-3 group-focus-within:translate-y-3 transition-transform"></div>
+                  <input type="email" className="relative w-full bg-white border-4 border-black p-4 font-hud text-2xl text-black focus:outline-none focus:bg-yellow-50 placeholder-zinc-400 uppercase" placeholder="PAGER # (EMAIL)" />
+                </div>
+              </div>
+
+              {/* Guest Toggle - Big Chunky Button */}
+              <div
+                className={`cursor-pointer border-4 border-black p-4 transition-all duration-200 relative ${isGuest ? 'bg-pink-500 text-white' : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'}`}
+                onClick={() => setIsGuest(!isGuest)}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-brand text-2xl md:text-3xl">I WANT TO BE A GUEST</span>
+                  <div className={`w-8 h-8 border-4 border-black bg-white flex items-center justify-center`}>
+                    {isGuest && <div className="w-4 h-4 bg-black"></div>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Guest Section */}
+              {isGuest && (
+                <div className="relative animate-in slide-in-from-top-2 fade-in duration-300">
+                  <div className="absolute -left-4 top-4 -rotate-90 text-pink-500 font-brand hidden md:block">PITCH IT</div>
+                  <textarea
+                    rows="3"
+                    className="w-full bg-yellow-100 border-4 border-black p-4 font-hud text-xl text-black focus:outline-none focus:bg-yellow-200 placeholder-black/50"
+                    placeholder="WHAT'S THE TOPIC? DON'T BE BORING..."
+                  ></textarea>
+                </div>
+              )}
+
+              {/* Message Area */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-black translate-x-2 translate-y-2 group-focus-within:translate-x-3 group-focus-within:translate-y-3 transition-transform"></div>
+                <textarea
+                  rows="5"
+                  className="relative w-full bg-white border-4 border-black p-4 font-hud text-xl text-black focus:outline-none focus:bg-cyan-50 placeholder-zinc-400 uppercase"
+                  placeholder="TYPE YOUR MESSAGE HERE..."
+                ></textarea>
+              </div>
+
+              {/* Submit Button */}
+              <button type="button" className="relative group mt-4">
+                <div className="absolute inset-0 bg-black translate-x-2 translate-y-2 group-hover:translate-x-3 group-hover:translate-y-3 transition-transform"></div>
+                <div className="relative bg-cyan-400 border-4 border-black p-4 flex items-center justify-center gap-4 group-hover:bg-cyan-300 transition-colors">
+                  <Send className="w-8 h-8 text-black" />
+                  <span className="font-brand text-3xl text-black">SEND IT</span>
+                </div>
+              </button>
+
+            </form>
+          </div>
+        </div>
+
+        {/* More Background Decor */}
+        <div className="absolute top-1/2 -right-12 w-24 h-24 bg-purple-500 border-4 border-black rotate-45 z-[-1] hidden md:block"></div>
+        <div className="absolute bottom-0 -left-8 w-32 h-32 bg-green-400 rounded-full border-4 border-black z-[-1] hidden md:block"></div>
       </div>
     </div>
   );
@@ -501,21 +753,38 @@ function HostCard({ name, role, quote, color, secondary, icon, mt = "mt-0" }) {
   );
 }
 
-function TapeSegment({ epNum, title, tags, color, lowerThird }) {
+function TapeSegment({ epNum, title, tags, color, lowerThird, onClick, thumbnail }) {
   return (
-    <div className="tape-segment w-[80vw] md:w-[60vw] h-full bg-zinc-900 border-8 border-white p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden">
+    <div
+      onClick={onClick}
+      className="tape-segment w-[80vw] md:w-[60vw] h-full bg-zinc-900 border-8 border-white p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden cursor-pointer group hover:border-yellow-400 transition-all"
+    >
+      {/* Thumbnail Background */}
+      {thumbnail && (
+        <div className="absolute inset-0 z-0">
+          <img
+            src={thumbnail}
+            alt={title}
+            className="w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity"
+            onError={(e) => e.target.style.display = 'none'}
+          />
+        </div>
+      )}
       <div className={`absolute inset-0 ${color} opacity-20 z-0`}></div>
       <div className="z-10 text-center">
         <div className="bg-black text-white font-hud text-xl inline-block px-2 mb-4">EPISODE {epNum}</div>
-        <h3 className="font-brand text-5xl md:text-7xl text-white mb-6 leading-tight">{title}</h3>
-        <div className="flex justify-center gap-4">
+        <h3 className="font-brand text-4xl md:text-6xl text-white mb-6 leading-tight drop-shadow-[4px_4px_0px_black]">{title}</h3>
+        <div className="flex justify-center gap-4 flex-wrap">
           {tags.map((tag, i) => (
             <span key={i} className={`bg-white text-black font-bold px-3 py-1 border-2 border-black ${i % 2 === 0 ? 'rotate-3' : '-rotate-2'}`}>{tag}</span>
           ))}
         </div>
+        <div className="mt-6 inline-flex items-center justify-center w-16 h-16 rounded-full border-4 border-white bg-pink-500 text-white group-hover:bg-yellow-400 group-hover:scale-110 transition-all">
+          <Play className="w-8 h-8 fill-current" />
+        </div>
       </div>
-      <div className="absolute bottom-10 left-0 w-full bg-gradient-to-r from-blue-600 to-transparent p-4 transform skew-x-12 -ml-8">
-        <div className="text-white font-hud text-2xl transform -skew-x-12 ml-10">{lowerThird}</div>
+      <div className="absolute bottom-10 left-0 w-full bg-gradient-to-r from-blue-600 to-transparent p-4 transform skew-x-12 -ml-8 z-20">
+        <div className="text-white font-hud text-xl md:text-2xl transform -skew-x-12 ml-10">{lowerThird}</div>
       </div>
     </div>
   );
