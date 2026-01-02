@@ -1,0 +1,57 @@
+name: Fetch YouTube Dates
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Number of videos to fetch (0 = all)'
+        required: false
+        default: '0'
+
+jobs:
+  fetch-dates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore date cache
+        uses: actions/cache@v4
+        with:
+          path: scripts/youtube-dates-cache.json
+          key: youtube-dates-cache-${{ github.run_id }}
+          restore-keys: |
+            youtube-dates-cache-
+
+      - name: Fetch YouTube dates
+        run: node scripts/fetch-youtube-dates.cjs
+        env:
+          BATCH_SIZE: ${{ github.event.inputs.batch_size }}
+
+      - name: Update episode dates
+        run: node scripts/update-episode-dates.cjs
+
+      - name: Save date cache
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/youtube-dates-cache.json
+          key: youtube-dates-cache-${{ github.run_id }}
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add src/episodeData.js scripts/youtube-dates-cache.json
+          git diff --staged --quiet || git commit -m "Update episode dates from YouTube"
+          git push
