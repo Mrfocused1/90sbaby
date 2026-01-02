@@ -515,8 +515,22 @@ export default function App() {
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isReelActive, setIsReelActive] = useState(false);
+    const [menuFuzzy, setMenuFuzzy] = useState(false);
 
     const containerRef = useRef(null);
+
+    // Mobile Menu Fuzzy Interval
+    useEffect(() => {
+        if (!isMenuOpen) {
+            setMenuFuzzy(false);
+            return;
+        }
+        const interval = setInterval(() => {
+            setMenuFuzzy(true);
+            setTimeout(() => setMenuFuzzy(false), 200 + Math.random() * 400); // Distortion duration
+        }, 2000 + Math.random() * 3000); // Frequency
+        return () => clearInterval(interval);
+    }, [isMenuOpen]);
 
     // Power On Sequence
     useEffect(() => {
@@ -745,9 +759,9 @@ export default function App() {
             </div>
 
             {/* --- MOBILE NAVIGATION MENU OVERLAY --- */}
-            <div className={`fixed inset-0 z-[100] bg-black/95 transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <div className={`fixed inset-0 z-[100] bg-black/95 transition-all duration-500 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} ${menuFuzzy ? 'vhs-fuzzy' : ''}`}>
                 {/* Visual Chaos/Noise */}
-                <div className="absolute inset-0 bg-noise opacity-10 pointer-events-none" />
+                <div className={`absolute inset-0 bg-noise pointer-events-none transition-opacity duration-75 ${menuFuzzy ? 'opacity-40 animate-pulse-noise' : 'opacity-10'}`} />
                 <div className="absolute top-0 right-0 p-8">
                     <button
                         onClick={() => setIsMenuOpen(false)}

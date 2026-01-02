@@ -15,28 +15,81 @@ body {
   overflow-x: hidden;
 }
 
-.font-hud { font-family: 'VT323', monospace; }
-.font-brand { font-family: 'Righteous', cursive; }
-.font-retro { font-family: 'Press Start 2P', cursive; }
-.font-bungee { font-family: 'Bungee Shade', cursive; }
+.font-hud {
+  font-family: 'VT323', monospace;
+}
+
+.font-brand {
+  font-family: 'Righteous', cursive;
+}
+
+.font-retro {
+  font-family: 'Press Start 2P', cursive;
+}
+
+.font-bungee {
+  font-family: 'Bungee Shade', cursive;
+}
 
 .scanlines {
-  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
   background-size: 100% 4px;
   animation: scrollScan 10s linear infinite;
   pointer-events: none;
 }
 
-@keyframes scrollScan { 
-  0% { background-position: 0 0; } 
-  100% { background-position: 0 100%; } 
+@keyframes scrollScan {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 100%;
+  }
 }
 
 .bg-noise {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E");
 }
 
-::-webkit-scrollbar { 
-  width: 0px; 
-  background: transparent; 
+@keyframes pulseNoise {
+  0% {
+    opacity: 0.05;
+  }
+
+  50% {
+    opacity: 0.2;
+  }
+
+  100% {
+    opacity: 0.05;
+  }
+}
+
+.animate-pulse-noise {
+  animation: pulseNoise 0.15s steps(2) infinite;
+}
+
+.vhs-fuzzy {
+  filter: blur(0.4px);
+  animation: fuzzyShift 0.2s steps(2) infinite;
+}
+
+@keyframes fuzzyShift {
+  0% {
+    transform: translate(1px, 1px);
+  }
+
+  50% {
+    transform: translate(-1px, -1px);
+  }
+
+  100% {
+    transform: translate(1px, 0);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
 }
