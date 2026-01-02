@@ -164,11 +164,11 @@ const HomeFlow = React.memo(({ isPoweredOn, onViewArchive, onViewContact, onVide
             </section>
 
             {/* SECTION 4: TAPE REEL - REAL EPISODES */}
-            <div className="tape-track h-screen w-full bg-blue-900 overflow-hidden relative flex items-center">
+            <div className="tape-track h-[70vh] md:h-screen w-full bg-blue-900 overflow-hidden relative flex items-center">
                 <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 10px, transparent 10px, transparent 20px)' }}></div>
                 <div className="absolute top-10 left-10 z-30 bg-red-600 text-white font-hud px-4 py-2 text-2xl border-4 border-white shadow-[4px_4px_0px_black]">LATEST EPISODES</div>
 
-                <div className="tape-reel flex pl-4 md:pl-[20vw] gap-6 md:gap-[20vw] w-max h-full md:h-[60vh] py-20 md:py-0">
+                <div className="tape-reel flex pl-4 md:pl-[20vw] gap-6 md:gap-[20vw] w-max h-full md:h-[60vh] py-12 md:py-0">
                     {latestEpisodes.map((ep, idx) => (
                         <TapeSegment
                             key={ep.id}
@@ -718,7 +718,7 @@ export default function App() {
                 {/* Focus Brackets (Only in Home View) */}
                 {view === 'home' && (
                     <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-700 ${isPoweredOn ? 'scale-100 opacity-60' : 'scale-150 opacity-0'}`}>
-                        <div className="w-[80vw] h-[60vh] md:w-[600px] md:h-[400px] border-2 border-white/30 relative">
+                        <div className="w-[90vw] h-[45vh] md:w-[600px] md:h-[400px] border-2 border-white/30 relative">
                             <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white/80 -mt-1 -ml-1" />
                             <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white/80 -mt-1 -mr-1" />
                             <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white/80 -mb-1 -ml-1" />
