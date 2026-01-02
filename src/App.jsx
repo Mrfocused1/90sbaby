@@ -71,7 +71,7 @@ const TapeSegment = React.memo(({ epNum, title, tags, color, lowerThird, onClick
     return (
         <div
             onClick={onClick}
-            className="tape-segment w-[80vw] md:w-[60vw] h-full bg-zinc-900 border-8 border-white p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden cursor-pointer group hover:border-yellow-400 transition-all"
+            className="tape-segment w-[90vw] md:w-[60vw] h-[45vh] md:h-full bg-zinc-900 border-4 md:border-8 border-white p-2 md:p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden cursor-pointer group hover:border-yellow-400 transition-all"
         >
             {/* Thumbnail Background */}
             {thumbnail && (
@@ -85,20 +85,20 @@ const TapeSegment = React.memo(({ epNum, title, tags, color, lowerThird, onClick
                 </div>
             )}
             <div className={`absolute inset-0 ${color} opacity-20 z-0`}></div>
-            <div className="z-10 text-center">
-                <div className="bg-black text-white font-hud text-xl inline-block px-2 mb-4">EPISODE {epNum}</div>
-                <h3 className="font-brand text-4xl md:text-6xl text-white mb-6 leading-tight drop-shadow-[4px_4px_0px_black]">{title}</h3>
-                <div className="flex justify-center gap-4 flex-wrap">
+            <div className="z-10 text-center px-4 w-full">
+                <div className="bg-black text-white font-hud text-base md:text-xl inline-block px-2 mb-2 md:mb-4">EPISODE {epNum}</div>
+                <h3 className="font-brand text-2xl md:text-6xl text-white mb-4 md:mb-6 leading-tight drop-shadow-[4px_4px_0px_black] line-clamp-3">{title}</h3>
+                <div className="flex justify-center gap-2 md:gap-4 flex-wrap">
                     {tags.map((tag, i) => (
-                        <span key={i} className={`bg-white text-black font-bold px-3 py-1 border-2 border-black ${i % 2 === 0 ? 'rotate-3' : '-rotate-2'}`}>{tag}</span>
+                        <span key={i} className={`bg-white text-black font-bold px-2 py-0.5 md:px-3 md:py-1 border border-black text-xs md:text-base ${i % 2 === 0 ? 'rotate-3' : '-rotate-2'}`}>{tag}</span>
                     ))}
                 </div>
-                <div className="mt-6 inline-flex items-center justify-center w-16 h-16 rounded-full border-4 border-white bg-pink-500 text-white group-hover:bg-yellow-400 group-hover:scale-110 transition-all">
-                    <Play className="w-8 h-8 fill-current" />
+                <div className="mt-4 md:mt-6 inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full border-2 md:border-4 border-white bg-pink-500 text-white group-hover:bg-yellow-400 group-hover:scale-110 transition-all">
+                    <Play className="w-6 h-6 md:w-8 md:h-8 fill-current" />
                 </div>
             </div>
-            <div className="absolute bottom-10 left-0 w-full bg-gradient-to-r from-blue-600 to-transparent p-4 transform skew-x-12 -ml-8 z-20">
-                <div className="text-white font-hud text-xl md:text-2xl transform -skew-x-12 ml-10">{lowerThird}</div>
+            <div className="absolute bottom-6 md:bottom-10 left-0 w-full bg-gradient-to-r from-blue-600 to-transparent p-2 md:p-4 transform skew-x-12 -ml-8 z-20">
+                <div className="text-white font-hud text-sm md:text-2xl transform -skew-x-12 ml-10">{lowerThird}</div>
             </div>
         </div>
     );
@@ -168,7 +168,7 @@ const HomeFlow = React.memo(({ isPoweredOn, onViewArchive, onViewContact, onVide
                 <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 10px, transparent 10px, transparent 20px)' }}></div>
                 <div className="absolute top-10 left-10 z-30 bg-red-600 text-white font-hud px-4 py-2 text-2xl border-4 border-white shadow-[4px_4px_0px_black]">LATEST EPISODES</div>
 
-                <div className="tape-reel flex pl-[20vw] gap-[20vw] w-max h-[60vh]">
+                <div className="tape-reel flex pl-4 md:pl-[20vw] gap-6 md:gap-[20vw] w-max h-full md:h-[60vh] py-20 md:py-0">
                     {latestEpisodes.map((ep, idx) => (
                         <TapeSegment
                             key={ep.id}
@@ -183,18 +183,18 @@ const HomeFlow = React.memo(({ isPoweredOn, onViewArchive, onViewContact, onVide
                     ))}
 
                     {/* ARCHIVE LINK CARD */}
-                    <div onClick={onViewArchive} className="tape-segment w-[80vw] md:w-[60vw] h-full bg-zinc-800 border-8 border-white p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-zinc-700 transition-colors group">
+                    <div onClick={onViewArchive} className="tape-segment w-[90vw] md:w-[60vw] h-[45vh] md:h-full bg-zinc-800 border-4 md:border-8 border-white p-4 relative shadow-[10px_10px_0px_rgba(0,0,0,0.5)] shrink-0 flex items-center justify-center overflow-hidden cursor-pointer hover:bg-zinc-700 transition-colors group">
                         <div className="absolute inset-0 bg-yellow-500/10 z-0"></div>
                         <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
                         <div className="z-10 text-center transform group-hover:scale-105 transition-transform duration-300">
-                            <div className="bg-white text-black font-hud text-xl inline-block px-2 mb-4 border-2 border-black rotate-1">THE VAULT</div>
-                            <h3 className="font-brand text-5xl md:text-7xl text-white mb-6 leading-tight drop-shadow-md">VIEW ALL<br />EPISODES</h3>
-                            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 border-white bg-pink-500 text-white shadow-[4px_4px_0px_black] group-hover:bg-pink-400 group-hover:shadow-[6px_6px_0px_black] transition-all">
-                                <FastForward className="w-10 h-10 fill-current" />
+                            <div className="bg-white text-black font-hud text-base md:text-xl inline-block px-2 mb-4 border-2 border-black rotate-1">THE VAULT</div>
+                            <h3 className="font-brand text-4xl md:text-7xl text-white mb-6 leading-tight drop-shadow-md">VIEW ALL<br />EPISODES</h3>
+                            <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-full border-4 border-white bg-pink-500 text-white shadow-[4px_4px_0px_black] group-hover:bg-pink-400 group-hover:shadow-[6px_6px_0px_black] transition-all">
+                                <FastForward className="w-8 h-8 md:w-10 md:h-10 fill-current" />
                             </div>
                         </div>
-                        <div className="absolute bottom-10 left-0 w-full bg-gradient-to-r from-white to-transparent p-4 transform skew-x-12 -ml-8">
-                            <div className="text-black font-hud text-2xl transform -skew-x-12 ml-10 flex items-center gap-2">
+                        <div className="absolute bottom-6 md:bottom-10 left-0 w-full bg-gradient-to-r from-white to-transparent p-2 md:p-4 transform skew-x-12 -ml-8">
+                            <div className="text-black font-hud text-lg md:text-2xl transform -skew-x-12 ml-10 flex items-center gap-2">
                                 <span className="animate-pulse">●</span> Insert Next Tape...
                             </div>
                         </div>
