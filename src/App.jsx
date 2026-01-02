@@ -49,9 +49,9 @@ const SHOW_INFO = {
 
 // --- HELPER COMPONENTS ---
 
-const HostCard = React.memo(({ name, role, quote, color, secondary, icon, mt = "mt-0" }) => {
+const HostCard = React.memo(({ name, role, quote, color, secondary, icon, mt = "mt-0", customClasses = "" }) => {
     return (
-        <div className={`host-card group relative mt-12 ${mt}`}>
+        <div className={`host-card group relative ${mt} ${customClasses}`}>
             <div className={`absolute inset-0 ${color} transform translate-x-2 translate-y-2 border-4 border-black`}></div>
             <div className={`relative ${secondary} border-4 border-black p-6 flex flex-col items-center hover:-translate-y-2 transition-transform duration-200`}>
                 <div className="w-32 h-32 rounded-full bg-white/20 border-4 border-black mb-4 flex items-center justify-center">
@@ -156,10 +156,34 @@ const HomeFlow = React.memo(({ isPoweredOn, onViewArchive, onViewContact, onVide
             {/* SECTION 3: HOSTS */}
             <section className="py-20 bg-zinc-800 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#ffffff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
-                <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 relative z-20">
-                    <HostCard name="FRED" role="THE VIBE" quote="Hold tight..." color="bg-yellow-400" secondary="bg-purple-600" icon={<CassetteTape className="w-16 h-16 text-black" />} />
-                    <HostCard name="TEMI" role="THE SPARK" quote="Facts Only!" color="bg-cyan-400" secondary="bg-pink-500" icon={<Star className="w-16 h-16 text-black" />} mt="md:mt-0" />
-                    <HostCard name="VP" role="THE ENERGY" quote="Let's Go!" color="bg-pink-500" secondary="bg-yellow-400" icon={<Zap className="w-16 h-16 text-black" />} mt="md:mt-24" />
+                <div className="container mx-auto px-8 flex flex-col md:grid md:grid-cols-3 md:gap-12 relative z-20">
+                    <HostCard
+                        name="FRED"
+                        role="THE VIBE"
+                        quote="Hold tight..."
+                        color="bg-yellow-400"
+                        secondary="bg-purple-600"
+                        icon={<CassetteTape className="w-16 h-16 text-black" />}
+                        customClasses="rotate-2 mb-[-60px] md:mb-0 md:mt-12"
+                    />
+                    <HostCard
+                        name="TEMI"
+                        role="THE SPARK"
+                        quote="Facts Only!"
+                        color="bg-cyan-400"
+                        secondary="bg-pink-500"
+                        icon={<Star className="w-16 h-16 text-black" />}
+                        customClasses="-rotate-3 z-10 mb-[-60px] md:mb-0 md:mt-0"
+                    />
+                    <HostCard
+                        name="VP"
+                        role="THE ENERGY"
+                        quote="Let's Go!"
+                        color="bg-pink-500"
+                        secondary="bg-yellow-400"
+                        icon={<Zap className="w-16 h-16 text-black" />}
+                        customClasses="rotate-1 z-20 md:mt-24"
+                    />
                 </div>
             </section>
 
