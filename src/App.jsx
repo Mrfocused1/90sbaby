@@ -420,6 +420,8 @@ const ArchiveFlow = React.memo(({ onBack, searchQuery, setSearchQuery, episodes,
 // --- SUB-COMPONENT: CONTACT FLOW (REDESIGNED) ---
 const ContactFlow = React.memo(({ onBack }) => {
     const [isGuest, setIsGuest] = useState(false);
+    const [isSponsor, setIsSponsor] = useState(false);
+    const [isMember, setIsMember] = useState(false);
 
     return (
         <div className="min-h-screen bg-zinc-900 pt-24 pb-32 px-4 md:px-12 relative z-30 overflow-hidden">
@@ -493,6 +495,56 @@ const ContactFlow = React.memo(({ onBack }) => {
                                         rows="3"
                                         className="w-full bg-yellow-100 border-4 border-black p-4 font-hud text-xl text-black focus:outline-none focus:bg-yellow-200 placeholder-black/50"
                                         placeholder="WHAT'S THE TOPIC? DON'T BE BORING..."
+                                    ></textarea>
+                                </div>
+                            )}
+
+                            {/* Sponsor Toggle */}
+                            <div
+                                className={`cursor-pointer border-4 border-black p-4 transition-all duration-200 relative ${isSponsor ? 'bg-yellow-400 text-black' : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'}`}
+                                onClick={() => setIsSponsor(!isSponsor)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="font-brand text-2xl md:text-3xl">SPONSOR US</span>
+                                    <div className={`w-8 h-8 border-4 border-black bg-white flex items-center justify-center`}>
+                                        {isSponsor && <div className="w-4 h-4 bg-black"></div>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Dynamic Sponsor Section */}
+                            {isSponsor && (
+                                <div className="relative animate-in slide-in-from-top-2 fade-in duration-300">
+                                    <div className="absolute -left-4 top-4 -rotate-90 text-yellow-500 font-brand hidden md:block">$$$$</div>
+                                    <textarea
+                                        rows="3"
+                                        className="w-full bg-yellow-100 border-4 border-black p-4 font-hud text-xl text-black focus:outline-none focus:bg-yellow-200 placeholder-black/50"
+                                        placeholder="TELL US ABOUT YOUR BRAND / SPONSORSHIP IDEA..."
+                                    ></textarea>
+                                </div>
+                            )}
+
+                            {/* Member Toggle */}
+                            <div
+                                className={`cursor-pointer border-4 border-black p-4 transition-all duration-200 relative ${isMember ? 'bg-cyan-400 text-black' : 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300'}`}
+                                onClick={() => setIsMember(!isMember)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <span className="font-brand text-2xl md:text-3xl">BECOME A MEMBER</span>
+                                    <div className={`w-8 h-8 border-4 border-black bg-white flex items-center justify-center`}>
+                                        {isMember && <div className="w-4 h-4 bg-black"></div>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Dynamic Member Section */}
+                            {isMember && (
+                                <div className="relative animate-in slide-in-from-top-2 fade-in duration-300">
+                                    <div className="absolute -left-4 top-4 -rotate-90 text-cyan-500 font-brand hidden md:block">JOIN</div>
+                                    <textarea
+                                        rows="3"
+                                        className="w-full bg-cyan-100 border-4 border-black p-4 font-hud text-xl text-black focus:outline-none focus:bg-cyan-200 placeholder-black/50"
+                                        placeholder="WHY DO YOU WANT TO JOIN THE 90S BABY CREW?"
                                     ></textarea>
                                 </div>
                             )}
@@ -645,6 +697,56 @@ export default function App() {
         return () => ctx.revert();
     }, [gsapReady, isPoweredOn, view]);
 
+    // Archive View Scroll Logic - Updates timecode on scroll
+    useLayoutEffect(() => {
+        if (!gsapReady || !isPoweredOn || view !== 'archive') return;
+
+        const handleScroll = () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+
+            // Calculate timecode based on scroll progress
+            const totalFrames = Math.floor(progress * 5000);
+            const hrs = Math.floor(totalFrames / 108000).toString().padStart(2, '0');
+            const mins = Math.floor((totalFrames % 108000) / 1800).toString().padStart(2, '0');
+            const secs = Math.floor((totalFrames % 1800) / 30).toString().padStart(2, '0');
+            const frames = (totalFrames % 30).toString().padStart(2, '0');
+            const newTimecode = `${hrs}:${mins}:${secs}:${frames}`;
+            setTimecode(prev => prev !== newTimecode ? newTimecode : prev);
+
+            // Add subtle glitch effect on fast scroll
+            const now = Date.now();
+            if (!handleScroll.lastTime) handleScroll.lastTime = now;
+            const delta = now - handleScroll.lastTime;
+            handleScroll.lastTime = now;
+
+            if (!handleScroll.lastScrollTop) handleScroll.lastScrollTop = scrollTop;
+            const velocity = Math.abs(scrollTop - handleScroll.lastScrollTop) / (delta || 1) * 16;
+            handleScroll.lastScrollTop = scrollTop;
+
+            const glitchAmount = Math.min(velocity / 50, 0.5);
+            setTapeGlitch(glitchAmount);
+
+            // Update mode based on scroll velocity
+            if (velocity > 30) {
+                setMode(scrollTop > handleScroll.prevScrollTop ? "FF >>" : "<< REW");
+            } else if (velocity > 5) {
+                setMode("PLAY");
+            } else {
+                setMode("DB_ACCESS");
+            }
+            handleScroll.prevScrollTop = scrollTop;
+        };
+
+        // Initialize mode for archive
+        setMode("DB_ACCESS");
+        setTimecode("00:00:00:00");
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [gsapReady, isPoweredOn, view]);
+
     // Handle View Switching
     const handleViewArchive = () => {
         setMode("DB_ACCESS");
@@ -720,14 +822,6 @@ export default function App() {
                             {view === 'home' ? 'SP' : view === 'archive' ? 'ARCHIVE' : 'UPLINK'}
                         </span>
 
-                        {/* MOBILE MENU TOGGLE */}
-                        <button
-                            onClick={() => setIsMenuOpen(true)}
-                            className="md:hidden mt-2 pointer-events-auto bg-white text-black font-brand text-xs px-2 py-1 border-2 border-black flex items-center gap-2 active:translate-y-0.5"
-                        >
-                            <CassetteTape className="w-4 h-4" /> MENU
-                        </button>
-
                         {/* --- NAVIGATION MENU (DESKTOP) --- */}
                         <nav className="mt-4 hidden md:flex gap-4 md:gap-8 pointer-events-auto">
                             <button
@@ -751,6 +845,13 @@ export default function App() {
                         </nav>
                     </div>
                     <div className="flex flex-col items-end gap-1 md:gap-2">
+                        {/* MOBILE MENU TOGGLE */}
+                        <button
+                            onClick={() => setIsMenuOpen(true)}
+                            className="md:hidden pointer-events-auto bg-white text-black font-brand text-xs px-2 py-1 border-2 border-black flex items-center gap-2 active:translate-y-0.5"
+                        >
+                            <CassetteTape className="w-4 h-4" /> MENU
+                        </button>
                         <div className="flex items-center gap-2 text-green-400"><Battery className="w-6 h-6 md:w-8 md:h-8" /></div>
                         <span className="font-mono bg-black/50 px-2 rounded backdrop-blur-sm border border-white/20 text-sm md:text-xl">{timecode}</span>
                     </div>
