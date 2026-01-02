@@ -168,7 +168,7 @@ const HomeFlow = React.memo(({ isPoweredOn, onViewArchive, onViewContact, onVide
                 <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 10px, transparent 10px, transparent 20px)' }}></div>
                 <div className="absolute top-10 left-10 z-30 bg-red-600 text-white font-hud px-4 py-2 text-2xl border-4 border-white shadow-[4px_4px_0px_black]">LATEST EPISODES</div>
 
-                <div className="tape-reel flex pl-4 md:pl-[20vw] gap-6 md:gap-[20vw] w-max h-full md:h-[60vh] py-12 md:py-0">
+                <div className="tape-reel flex pl-[5vw] md:pl-[20vw] gap-6 md:gap-[20vw] w-max h-full md:h-[60vh] py-12 md:py-0">
                     {latestEpisodes.map((ep, idx) => (
                         <TapeSegment
                             key={ep.id}
@@ -589,6 +589,7 @@ export default function App() {
                         pin: true,
                         scrub: 1,
                         invalidateOnRefresh: true,
+                        start: window.innerWidth < 768 ? "center center" : "top top",
                         end: "+=3000",
                     }
                 });
