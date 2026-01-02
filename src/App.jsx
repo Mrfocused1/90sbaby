@@ -645,6 +645,56 @@ export default function App() {
         return () => ctx.revert();
     }, [gsapReady, isPoweredOn, view]);
 
+    // Archive View Scroll Logic - Updates timecode on scroll
+    useLayoutEffect(() => {
+        if (!gsapReady || !isPoweredOn || view !== 'archive') return;
+
+        const handleScroll = () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = docHeight > 0 ? scrollTop / docHeight : 0;
+
+            // Calculate timecode based on scroll progress
+            const totalFrames = Math.floor(progress * 5000);
+            const hrs = Math.floor(totalFrames / 108000).toString().padStart(2, '0');
+            const mins = Math.floor((totalFrames % 108000) / 1800).toString().padStart(2, '0');
+            const secs = Math.floor((totalFrames % 1800) / 30).toString().padStart(2, '0');
+            const frames = (totalFrames % 30).toString().padStart(2, '0');
+            const newTimecode = `${hrs}:${mins}:${secs}:${frames}`;
+            setTimecode(prev => prev !== newTimecode ? newTimecode : prev);
+
+            // Add subtle glitch effect on fast scroll
+            const now = Date.now();
+            if (!handleScroll.lastTime) handleScroll.lastTime = now;
+            const delta = now - handleScroll.lastTime;
+            handleScroll.lastTime = now;
+
+            if (!handleScroll.lastScrollTop) handleScroll.lastScrollTop = scrollTop;
+            const velocity = Math.abs(scrollTop - handleScroll.lastScrollTop) / (delta || 1) * 16;
+            handleScroll.lastScrollTop = scrollTop;
+
+            const glitchAmount = Math.min(velocity / 50, 0.5);
+            setTapeGlitch(glitchAmount);
+
+            // Update mode based on scroll velocity
+            if (velocity > 30) {
+                setMode(scrollTop > handleScroll.prevScrollTop ? "FF >>" : "<< REW");
+            } else if (velocity > 5) {
+                setMode("PLAY");
+            } else {
+                setMode("DB_ACCESS");
+            }
+            handleScroll.prevScrollTop = scrollTop;
+        };
+
+        // Initialize mode for archive
+        setMode("DB_ACCESS");
+        setTimecode("00:00:00:00");
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [gsapReady, isPoweredOn, view]);
+
     // Handle View Switching
     const handleViewArchive = () => {
         setMode("DB_ACCESS");
