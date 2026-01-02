@@ -649,7 +649,7 @@ export default function App() {
         <div ref={containerRef} className="bg-zinc-900 min-h-screen relative overflow-x-hidden font-sans selection:bg-pink-500 selection:text-white">
 
             {/* --- VIEWFINDER HUD (ALWAYS VISIBLE) --- */}
-            <div className="fixed inset-0 z-50 pointer-events-none p-2 md:p-6 flex flex-col justify-between overflow-hidden">
+            <div className="fixed inset-0 z-50 pointer-events-none p-4 pt-12 md:p-8 flex flex-col justify-between overflow-hidden">
                 <div className={`absolute inset-0 bg-gradient-to-br from-white/5 to-black/20 mix-blend-overlay pointer-events-none transition-opacity duration-100 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`} />
                 <div className={`absolute inset-0 scanlines pointer-events-none z-10 ${isPoweredOn ? 'opacity-30' : 'opacity-0'}`} />
                 <div
@@ -661,7 +661,7 @@ export default function App() {
                 />
 
                 {/* HUD Top */}
-                <div className={`flex justify-between items-start font-hud text-xl md:text-3xl text-white tracking-widest drop-shadow-md transition-opacity duration-500 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`flex justify-between items-start font-hud text-lg md:text-3xl text-white tracking-widest drop-shadow-md transition-opacity duration-500 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                             {mode === "REC" && <div className="w-4 h-4 md:w-6 md:h-6 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_red]" />}
@@ -700,9 +700,9 @@ export default function App() {
                             </button>
                         </nav>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-2 text-green-400"><Battery className="w-8 h-8" /></div>
-                        <span className="font-mono bg-black/50 px-2 rounded backdrop-blur-sm border border-white/20">{timecode}</span>
+                    <div className="flex flex-col items-end gap-1 md:gap-2">
+                        <div className="flex items-center gap-2 text-green-400"><Battery className="w-6 h-6 md:w-8 md:h-8" /></div>
+                        <span className="font-mono bg-black/50 px-2 rounded backdrop-blur-sm border border-white/20 text-sm md:text-xl">{timecode}</span>
                     </div>
                 </div>
 
@@ -723,12 +723,12 @@ export default function App() {
                 )}
 
                 {/* HUD Bottom */}
-                <div className={`font-hud text-lg md:text-2xl text-white/80 flex justify-between items-end transition-opacity duration-1000 delay-500 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`font-hud text-base md:text-2xl text-white/80 flex justify-between items-end transition-opacity duration-1000 delay-500 pb-20 md:pb-0 ${isPoweredOn ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="flex flex-col">
                         <span className="text-yellow-300">JAN 02 1996</span>
-                        <span className="text-sm">MEMPHIS_TAPE_{view === 'home' ? '01' : 'LIB'}</span>
+                        <span className="text-xs md:text-sm">MEMPHIS_TAPE_{view === 'home' ? '01' : 'LIB'}</span>
                     </div>
-                    {tapeGlitch > 0.5 && <span className="text-red-500 animate-pulse bg-black px-2">TRACKING ERROR</span>}
+                    {tapeGlitch > 0.5 && <span className="text-red-500 animate-pulse bg-black px-2 text-xs md:text-sm">TRACKING ERROR</span>}
                 </div>
             </div>
 
