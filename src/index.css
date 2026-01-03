@@ -89,6 +89,120 @@ body {
   }
 }
 
+/* TV Static Effect for Menu Transition */
+@keyframes tvStatic {
+  0% {
+    transform: translateX(0) translateY(0);
+    filter: contrast(2) brightness(1.5);
+  }
+  10% {
+    transform: translateX(-2px) translateY(1px);
+  }
+  20% {
+    transform: translateX(2px) translateY(-1px);
+    filter: contrast(1.5) brightness(2);
+  }
+  30% {
+    transform: translateX(-1px) translateY(2px);
+  }
+  40% {
+    transform: translateX(1px) translateY(-2px);
+    filter: contrast(2.5) brightness(1);
+  }
+  50% {
+    transform: translateX(-2px) translateY(0);
+  }
+  60% {
+    transform: translateX(2px) translateY(1px);
+    filter: contrast(1.8) brightness(1.8);
+  }
+  70% {
+    transform: translateX(0) translateY(-1px);
+  }
+  80% {
+    transform: translateX(-1px) translateY(1px);
+    filter: contrast(2) brightness(1.2);
+  }
+  90% {
+    transform: translateX(1px) translateY(0);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+    filter: contrast(2) brightness(1.5);
+  }
+}
+
+@keyframes tvFlicker {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  5% {
+    opacity: 0.8;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  20% {
+    opacity: 0.2;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  30% {
+    opacity: 0.4;
+  }
+  35% {
+    opacity: 0.7;
+  }
+  40% {
+    opacity: 0.25;
+  }
+  45% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.15;
+  }
+  55% {
+    opacity: 0.8;
+  }
+  60% {
+    opacity: 0.35;
+  }
+  65% {
+    opacity: 0.75;
+  }
+  70% {
+    opacity: 0.2;
+  }
+  75% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.3;
+  }
+  85% {
+    opacity: 0.65;
+  }
+  90% {
+    opacity: 0.45;
+  }
+  95% {
+    opacity: 0.85;
+  }
+}
+
+.animate-tv-static {
+  animation: tvStatic 0.1s steps(3) infinite;
+}
+
+.animate-tv-flicker {
+  animation: tvFlicker 0.15s steps(2) infinite;
+}
+
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent;
