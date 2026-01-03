@@ -11,6 +11,7 @@ on:
 jobs:
   fetch-dates:
     runs-on: ubuntu-latest
+    timeout-minutes: 180  # 3 hours max
 
     steps:
       - name: Checkout repository
@@ -22,6 +23,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install yt-dlp
+        run: pip install yt-dlp
 
       - name: Install dependencies
         run: npm ci
@@ -44,6 +53,7 @@ jobs:
 
       - name: Save date cache
         uses: actions/cache/save@v4
+        if: always()
         with:
           path: scripts/youtube-dates-cache.json
           key: youtube-dates-cache-${{ github.run_id }}

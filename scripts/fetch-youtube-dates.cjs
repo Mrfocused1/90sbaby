@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
+const { execSync } = require('child_process');
 
 const EPISODE_FILE = path.join(__dirname, '../src/episodeData.js');
 const CACHE_FILE = path.join(__dirname, 'youtube-dates-cache.json');
@@ -17,7 +17,7 @@ function loadCache() {
     return {};
 }
 
-// Save cache after each successful fetch
+// Save cache
 function saveCache(cache) {
     fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
 }
@@ -33,76 +33,36 @@ function loadEpisodes() {
 }
 
 // Format date to "MMM YYYY" format
-function formatDate(isoDate) {
-    const date = new Date(isoDate);
+function formatDate(dateStr) {
+    // Handle YYYYMMDD format from yt-dlp
+    if (/^\d{8}$/.test(dateStr)) {
+        const year = dateStr.substring(0, 4);
+        const month = parseInt(dateStr.substring(4, 6)) - 1;
+        const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        return `${monthNames[month]} ${year}`;
+    }
+    // Handle ISO format
+    const date = new Date(dateStr);
     const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-// Fetch page HTML
-function fetchPage(url) {
-    return new Promise((resolve, reject) => {
-        const options = {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-            }
-        };
-
-        https.get(url, options, (res) => {
-            let data = '';
-            res.on('data', (chunk) => data += chunk);
-            res.on('end', () => resolve(data));
-        }).on('error', reject);
-    });
-}
-
-// Extract publish date from YouTube page HTML
-function extractDateFromHTML(html) {
-    // Method 1: Look for datePublished in meta tag
-    let match = html.match(/<meta\s+itemprop="datePublished"\s+content="([^"]+)"/i);
-    if (match) return match[1];
-
-    // Method 2: Look for uploadDate in JSON-LD
-    match = html.match(/"uploadDate"\s*:\s*"([^"]+)"/);
-    if (match) return match[1];
-
-    // Method 3: Look for datePublished in JSON-LD
-    match = html.match(/"datePublished"\s*:\s*"([^"]+)"/);
-    if (match) return match[1];
-
-    // Method 4: Look for publishDate in ytInitialPlayerResponse
-    match = html.match(/"publishDate"\s*:\s*"([^"]+)"/);
-    if (match) return match[1];
-
-    return null;
-}
-
-// Fetch publish date from YouTube video page
-async function fetchVideoDate(videoId, retries = 3) {
+// Fetch video date using yt-dlp
+function fetchVideoDate(videoId) {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
+    try {
+        const result = execSync(
+            `yt-dlp --skip-download --print "%(upload_date)s" "${url}" 2>/dev/null`,
+            { encoding: 'utf-8', timeout: 30000 }
+        ).trim();
 
-    for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-            const html = await fetchPage(url);
-            const dateISO = extractDateFromHTML(html);
-
-            if (dateISO && dateISO.match(/^\d{4}-\d{2}-\d{2}/)) {
-                return dateISO;
-            }
-
-            throw new Error('Date not found in page');
-
-        } catch (error) {
-            if (attempt < retries) {
-                console.log(`  Attempt ${attempt}/${retries} failed: ${error.message}`);
-                await new Promise(r => setTimeout(r, 2000));
-            }
+        if (result && /^\d{8}$/.test(result)) {
+            return result;
         }
+        return null;
+    } catch (error) {
+        return null;
     }
-
-    return null;
 }
 
 // Sleep helper
@@ -111,8 +71,16 @@ function sleep(ms) {
 }
 
 async function main() {
-    console.log('🎬 YouTube Date Fetcher');
-    console.log('========================\n');
+    console.log('🎬 YouTube Date Fetcher (yt-dlp)');
+    console.log('=================================\n');
+
+    // Check if yt-dlp is installed
+    try {
+        execSync('which yt-dlp', { encoding: 'utf-8' });
+    } catch {
+        console.log('Installing yt-dlp...');
+        execSync('pip install yt-dlp', { stdio: 'inherit' });
+    }
 
     // Load episodes and cache
     const episodes = loadEpisodes();
@@ -147,12 +115,12 @@ async function main() {
 
         process.stdout.write(`${progress} EP.${episode.id}: ${episode.youtubeId} ... `);
 
-        const dateISO = await fetchVideoDate(episode.youtubeId);
+        const dateStr = fetchVideoDate(episode.youtubeId);
 
-        if (dateISO) {
-            const formatted = formatDate(dateISO);
+        if (dateStr) {
+            const formatted = formatDate(dateStr);
             cache[episode.youtubeId] = {
-                dateISO,
+                dateISO: dateStr,
                 dateFormatted: formatted,
                 fetchedAt: new Date().toISOString()
             };
@@ -166,23 +134,23 @@ async function main() {
 
         // Rate limiting - wait between requests
         if (i < toFetch.length - 1) {
-            const delay = 1500 + Math.random() * 500; // 1.5-2 seconds
-            await sleep(delay);
+            await sleep(1000);
         }
 
-        // Longer pause every 100 videos
-        if ((i + 1) % 100 === 0 && i < toFetch.length - 1) {
-            console.log('\n⏸️  Taking a 30 second break...\n');
-            await sleep(30000);
+        // Save progress every 50 videos
+        if ((i + 1) % 50 === 0) {
+            console.log(`\n💾 Progress saved (${Object.keys(cache).length} cached)\n`);
         }
     }
 
-    console.log('\n========================');
+    console.log('\n=================================');
     console.log('📊 Summary:');
     console.log(`  ✅ Success: ${successCount}`);
     console.log(`  ❌ Failed: ${failCount}`);
     console.log(`  💾 Total cached: ${Object.keys(cache).length}`);
-    console.log('\n✅ Done! Run update-episode-dates.cjs to apply changes.');
 }
 
-main().catch(console.error);
+main().catch(err => {
+    console.error('Fatal error:', err.message);
+    process.exit(1);
+});
