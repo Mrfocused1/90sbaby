@@ -596,10 +596,26 @@ export default function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isReelActive, setIsReelActive] = useState(false);
     const [menuFuzzy, setMenuFuzzy] = useState(false);
+    const [menuStatic, setMenuStatic] = useState(false); // TV static transition effect
 
     const containerRef = useRef(null);
 
-    // Mobile Menu Fuzzy Interval
+    // Mobile Menu Static Transition & Fuzzy Interval
+    const handleMenuOpen = () => {
+        setMenuStatic(true);
+        setIsMenuOpen(true);
+        // Flash static effect then clear
+        setTimeout(() => setMenuStatic(false), 300);
+    };
+
+    const handleMenuClose = () => {
+        setMenuStatic(true);
+        setTimeout(() => {
+            setIsMenuOpen(false);
+            setMenuStatic(false);
+        }, 200);
+    };
+
     useEffect(() => {
         if (!isMenuOpen) {
             setMenuFuzzy(false);
@@ -851,7 +867,7 @@ export default function App() {
                     <div className="flex flex-col items-end gap-1 md:gap-2">
                         {/* MOBILE MENU TOGGLE */}
                         <button
-                            onClick={() => setIsMenuOpen(true)}
+                            onClick={handleMenuOpen}
                             className="md:hidden pointer-events-auto bg-white text-black font-brand text-xs px-2 py-1 border-2 border-black flex items-center gap-2 active:translate-y-0.5"
                         >
                             <CassetteTape className="w-4 h-4" /> MENU
@@ -888,12 +904,23 @@ export default function App() {
             </div>
 
             {/* --- MOBILE NAVIGATION MENU OVERLAY --- */}
-            <div className={`fixed inset-0 z-[100] bg-black/95 transition-all duration-500 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} ${menuFuzzy ? 'vhs-fuzzy' : ''}`}>
+            <div className={`fixed inset-0 z-[100] bg-black/95 transition-all duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} ${menuFuzzy ? 'vhs-fuzzy' : ''}`}>
+                {/* TV Static Transition Effect */}
+                <div
+                    className={`absolute inset-0 z-50 pointer-events-none transition-opacity duration-100 ${menuStatic ? 'opacity-100' : 'opacity-0'}`}
+                    style={{
+                        background: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)',
+                        backgroundSize: '100% 4px',
+                    }}
+                >
+                    <div className="absolute inset-0 bg-noise opacity-90 animate-tv-static mix-blend-overlay" />
+                    <div className="absolute inset-0 bg-white/20 animate-tv-flicker" />
+                </div>
                 {/* Visual Chaos/Noise */}
                 <div className={`absolute inset-0 bg-noise pointer-events-none transition-opacity duration-75 ${menuFuzzy ? 'opacity-40 animate-pulse-noise' : 'opacity-10'}`} />
                 <div className="absolute top-0 right-0 p-8">
                     <button
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={handleMenuClose}
                         className="text-white font-hud text-2xl flex items-center gap-2 hover:text-pink-500 transition-colors"
                     >
                         [X] CLOSE
@@ -904,7 +931,7 @@ export default function App() {
                     <div className="text-pink-500 font-brand text-xl tracking-tighter -rotate-3 bg-white px-2 border-2 border-black mb-4">SELECT MODE:</div>
 
                     <button
-                        onClick={() => { handleBackHome(); setIsMenuOpen(false); }}
+                        onClick={() => { handleBackHome(); handleMenuClose(); }}
                         className={`group relative text-5xl font-brand ${view === 'home' ? 'text-pink-500' : 'text-white'} hover:scale-110 transition-transform`}
                     >
                         <span className="relative z-10">HOME</span>
@@ -912,7 +939,7 @@ export default function App() {
                     </button>
 
                     <button
-                        onClick={() => { handleViewArchive(); setIsMenuOpen(false); }}
+                        onClick={() => { handleViewArchive(); handleMenuClose(); }}
                         className={`group relative text-5xl font-brand ${view === 'archive' ? 'text-cyan-400' : 'text-white'} hover:scale-110 transition-transform`}
                     >
                         <span className="relative z-10">ARCHIVE</span>
@@ -920,7 +947,7 @@ export default function App() {
                     </button>
 
                     <button
-                        onClick={() => { handleViewContact(); setIsMenuOpen(false); }}
+                        onClick={() => { handleViewContact(); handleMenuClose(); }}
                         className={`group relative text-5xl font-brand ${view === 'contact' ? 'text-yellow-400' : 'text-white'} hover:scale-110 transition-transform`}
                     >
                         <span className="relative z-10">UPLINK</span>
