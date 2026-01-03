@@ -2,16 +2,11 @@ name: Fetch YouTube Dates
 
 on:
   workflow_dispatch:
-    inputs:
-      batch_size:
-        description: 'Number of videos to fetch (0 = all)'
-        required: false
-        default: '0'
 
 jobs:
   fetch-dates:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 10  # Should complete in under 1 minute
 
     steps:
       - name: Checkout repository
@@ -24,21 +19,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install yt-dlp
-        run: |
-          pip install --upgrade yt-dlp
-          yt-dlp --version
-
-      - name: Test yt-dlp
-        run: |
-          echo "Testing yt-dlp..."
-          yt-dlp --skip-download --print "%(upload_date)s" "https://www.youtube.com/watch?v=dQw4w9WgXcQ" || echo "Test failed but continuing..."
-
       - name: Install dependencies
         run: npm ci
 
@@ -49,10 +29,10 @@ jobs:
           key: youtube-dates-cache-
           restore-keys: youtube-dates-cache-
 
-      - name: Fetch YouTube dates
+      - name: Fetch YouTube dates (via official API)
         run: node scripts/fetch-youtube-dates.cjs
         env:
-          BATCH_SIZE: ${{ github.event.inputs.batch_size }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
 
       - name: Update episode dates
         run: node scripts/update-episode-dates.cjs
