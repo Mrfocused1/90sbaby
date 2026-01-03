@@ -6,16 +6,18 @@ const CACHE_FILE = path.join(__dirname, 'youtube-dates-cache.json');
 
 function loadCache() {
     try {
-        return JSON.parse(fs.readFileSync(CACHE_FILE, 'utf-8'));
+        if (fs.existsSync(CACHE_FILE)) {
+            return JSON.parse(fs.readFileSync(CACHE_FILE, 'utf-8'));
+        }
     } catch (e) {
-        console.error('❌ Could not load cache file. Run fetch-youtube-dates.cjs first.');
-        process.exit(1);
+        console.log('Cache load error:', e.message);
     }
+    return {};
 }
 
 function loadEpisodes() {
     const content = fs.readFileSync(EPISODE_FILE, 'utf-8');
-    const match = content.match(/export const EPISODE_DB = (\[[\s\S]*\]);/);
+    const match = content.match(/export const EPISODE_DB = (\[[\s\S]*?\]);/);
     if (!match) {
         throw new Error('Could not parse episodeData.js');
     }
@@ -23,51 +25,68 @@ function loadEpisodes() {
 }
 
 function main() {
-    console.log('📝 Episode Date Updater');
-    console.log('========================\n');
+    console.log('==========================================');
+    console.log('  Episode Date Updater');
+    console.log('==========================================\n');
 
     const cache = loadCache();
+    const cacheCount = Object.keys(cache).length;
+
+    if (cacheCount === 0) {
+        console.log('No cached dates found. Nothing to update.');
+        process.exit(0);
+    }
+
     const episodes = loadEpisodes();
 
-    console.log(`📊 Episodes: ${episodes.length}`);
-    console.log(`💾 Cached dates: ${Object.keys(cache).length}\n`);
+    console.log(`Episodes: ${episodes.length}`);
+    console.log(`Cached dates: ${cacheCount}\n`);
 
     let updatedCount = 0;
     let unchangedCount = 0;
     let missingCount = 0;
+    let unavailableCount = 0;
 
     const updatedEpisodes = episodes.map(episode => {
         const cachedData = cache[episode.youtubeId];
 
-        if (cachedData && cachedData.dateFormatted) {
-            if (episode.date !== cachedData.dateFormatted) {
-                console.log(`EP.${episode.id}: "${episode.date}" → "${cachedData.dateFormatted}"`);
-                updatedCount++;
-                return {
-                    ...episode,
-                    date: cachedData.dateFormatted
-                };
-            } else {
-                unchangedCount++;
-                return episode;
-            }
-        } else {
+        if (!cachedData) {
             missingCount++;
-            console.log(`EP.${episode.id}: No cached date (keeping "${episode.date}")`);
             return episode;
         }
+
+        if (cachedData.status === 'unavailable' || cachedData.dateFormatted === 'UNAVAILABLE') {
+            unavailableCount++;
+            return episode;
+        }
+
+        if (cachedData.dateFormatted && episode.date !== cachedData.dateFormatted) {
+            console.log(`EP.${episode.id}: "${episode.date}" -> "${cachedData.dateFormatted}"`);
+            updatedCount++;
+            return { ...episode, date: cachedData.dateFormatted };
+        }
+
+        unchangedCount++;
+        return episode;
     });
 
-    // Write updated episodes back to file
     const outputContent = `export const EPISODE_DB = ${JSON.stringify(updatedEpisodes, null, 2)};`;
     fs.writeFileSync(EPISODE_FILE, outputContent);
 
-    console.log('\n========================');
-    console.log('📊 Summary:');
-    console.log(`  ✅ Updated: ${updatedCount}`);
-    console.log(`  ⏸️  Unchanged: ${unchangedCount}`);
-    console.log(`  ⚠️  Missing: ${missingCount}`);
-    console.log('\n✅ episodeData.js has been updated!');
+    console.log('\n==========================================');
+    console.log('  SUMMARY');
+    console.log('==========================================');
+    console.log(`  Updated:     ${updatedCount}`);
+    console.log(`  Unchanged:   ${unchangedCount}`);
+    console.log(`  Missing:     ${missingCount}`);
+    console.log(`  Unavailable: ${unavailableCount}`);
+    console.log('==========================================\n');
+
+    if (updatedCount > 0) {
+        console.log('episodeData.js has been updated!');
+    } else {
+        console.log('No changes needed.');
+    }
 }
 
 main();

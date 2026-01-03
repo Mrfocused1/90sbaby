@@ -11,7 +11,7 @@ on:
 jobs:
   fetch-dates:
     runs-on: ubuntu-latest
-    timeout-minutes: 180  # 3 hours max
+    timeout-minutes: 180
 
     steps:
       - name: Checkout repository
@@ -30,18 +30,24 @@ jobs:
           python-version: '3.x'
 
       - name: Install yt-dlp
-        run: pip install yt-dlp
+        run: |
+          pip install --upgrade yt-dlp
+          yt-dlp --version
+
+      - name: Test yt-dlp
+        run: |
+          echo "Testing yt-dlp..."
+          yt-dlp --skip-download --print "%(upload_date)s" "https://www.youtube.com/watch?v=dQw4w9WgXcQ" || echo "Test failed but continuing..."
 
       - name: Install dependencies
         run: npm ci
 
       - name: Restore date cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: scripts/youtube-dates-cache.json
-          key: youtube-dates-cache-${{ github.run_id }}
-          restore-keys: |
-            youtube-dates-cache-
+          key: youtube-dates-cache-
+          restore-keys: youtube-dates-cache-
 
       - name: Fetch YouTube dates
         run: node scripts/fetch-youtube-dates.cjs
@@ -56,12 +62,16 @@ jobs:
         if: always()
         with:
           path: scripts/youtube-dates-cache.json
-          key: youtube-dates-cache-${{ github.run_id }}
+          key: youtube-dates-cache-${{ github.run_number }}
 
-      - name: Commit changes
+      - name: Commit and push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add src/episodeData.js scripts/youtube-dates-cache.json
-          git diff --staged --quiet || git commit -m "Update episode dates from YouTube"
-          git push
+          git add src/episodeData.js scripts/youtube-dates-cache.json || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update episode dates from YouTube"
+            git push
+          fi
