@@ -6,8 +6,8 @@ const EPISODE_FILE = path.join(__dirname, '../src/episodeData.js');
 const CACHE_FILE = path.join(__dirname, 'youtube-dates-cache.json');
 
 // Configuration
-const MAX_CONSECUTIVE_FAILURES = 10;
-const DELAY_BETWEEN_REQUESTS = 2000;
+const MAX_CONSECUTIVE_FAILURES = 5;
+const BASE_DELAY = 5000;  // 5 seconds between requests
 const REQUEST_TIMEOUT = 60000;
 
 function loadCache() {
@@ -177,7 +177,9 @@ async function main() {
         }
 
         if (i < toFetch.length - 1) {
-            await sleep(DELAY_BETWEEN_REQUESTS);
+            // Longer delay after failures to avoid rate limiting
+            const delay = BASE_DELAY + (consecutiveFailures * 3000) + Math.random() * 2000;
+            await sleep(delay);
         }
 
         if ((i + 1) % 25 === 0) {
@@ -194,14 +196,14 @@ async function main() {
     console.log(`  Total cached: ${Object.keys(cache).length}`);
     console.log('==========================================\n');
 
-    // Exit successfully if we made any progress
+    // Always exit 0 so cache gets saved and workflow succeeds
     if (successCount > 0 || unavailableCount > 0) {
-        console.log('Completed with progress.');
-        process.exit(0);
+        console.log('Completed with progress!');
     } else if (failCount > 0) {
-        console.log('No progress made - all attempts failed.');
-        process.exit(1);
+        console.log('Rate limited - no new progress this run.');
+        console.log('Existing cache preserved. Run again later.');
     }
+    process.exit(0);
 }
 
 main().catch(err => {
