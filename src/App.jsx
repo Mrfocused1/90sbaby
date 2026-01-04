@@ -185,7 +185,7 @@ const HomeFlow = React.memo(({ isPoweredOn, onViewArchive, onViewContact, onVide
                         quote="Let's Go!"
                         color="bg-pink-500"
                         secondary="bg-yellow-400"
-                        icon={<Zap className="w-16 h-16 text-black" />}
+                        image="https://i.ibb.co/2Y3rjDQ0/Minimalist-Fashion-Collection-Photo-Collage-Instagram-Post.png"
                         customClasses="rotate-1 z-20 md:mt-24"
                     />
                 </div>
